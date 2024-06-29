@@ -1,8 +1,20 @@
-// components/MovieCard.js
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function MovieCard({ movie }) {
   const [showDetails, setShowDetails] = useState(false);
+  const [trailerUrl, setTrailerUrl] = useState('');
+
+  useEffect(() => {
+    if (showDetails && !trailerUrl) {
+      fetchTrailer(movie.title);
+    }
+  }, [showDetails]);
+
+  const fetchTrailer = async (title) => {
+    const res = await fetch(`/api/trailer?title=${encodeURIComponent(title)}`);
+    const data = await res.json();
+    setTrailerUrl(data.trailerUrl);
+  };
 
   return (
     <div
@@ -23,12 +35,16 @@ export default function MovieCard({ movie }) {
           <p className="text-sm mb-2"><strong>Rating:</strong> {movie.rating}</p>
           <p className="text-sm mb-2"><strong>Description:</strong> {movie.description}</p>
           <div className="mt-4">
-            <iframe
-              src={movie.trailerUrl}
-              frameBorder="0"
-              allowFullScreen
-              className="w-full h-40 rounded-lg"
-            ></iframe>
+            {trailerUrl ? (
+              <iframe
+                src={trailerUrl}
+                frameBorder="0"
+                allowFullScreen
+                className="w-full h-40 rounded-lg"
+              ></iframe>
+            ) : (
+              <p>Loading trailer...</p>
+            )}
           </div>
         </div>
       )}
