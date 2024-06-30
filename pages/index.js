@@ -9,14 +9,15 @@ export default function Home() {
   const [itemsPerPage, setItemsPerPage] = useState(20);
   const [sortOption, setSortOption] = useState('rating');
   const [yearFilter, setYearFilter] = useState('');
+  const [category, setCategory] = useState('all');
 
   useEffect(() => {
-    fetchMovies(1, itemsPerPage, sortOption, yearFilter);
-  }, [itemsPerPage, sortOption, yearFilter]);
+    fetchMovies(1, itemsPerPage, sortOption, yearFilter, category);
+  }, [itemsPerPage, sortOption, yearFilter, category]);
 
-  const fetchMovies = async (page, limit, sort, year) => {
+  const fetchMovies = async (page, limit, sort, year, category) => {
     setLoading(true);
-    const res = await fetch(`/api/movies?page=${page}&limit=${limit}&sort=${sort}&year=${year}`);
+    const res = await fetch(`/api/movies?page=${page}&limit=${limit}&sort=${sort}&year=${year}&category=${category}`);
     const data = await res.json();
     if (Array.isArray(data)) {
       setMovies(page === 1 ? data : [...movies, ...data]);
@@ -30,7 +31,7 @@ export default function Home() {
     setSortOption(option);
     setCurrentPage(1);
     setMovies([]);
-    fetchMovies(1, itemsPerPage, option, yearFilter);
+    fetchMovies(1, itemsPerPage, option, yearFilter, category);
   };
 
   const handleYearChange = (event) => {
@@ -38,39 +39,66 @@ export default function Home() {
     setYearFilter(year);
     setCurrentPage(1);
     setMovies([]);
-    fetchMovies(1, itemsPerPage, sortOption, year);
+    fetchMovies(1, itemsPerPage, sortOption, year, category);
+  };
+
+  const handleCategoryChange = (event) => {
+    const category = event.target.value;
+    setCategory(category);
+    setCurrentPage(1);
+    setMovies([]);
+    fetchMovies(1, itemsPerPage, sortOption, yearFilter, category);
   };
 
   const loadMoreMovies = () => {
     const nextPage = currentPage + 1;
     setCurrentPage(nextPage);
-    fetchMovies(nextPage, itemsPerPage, sortOption, yearFilter);
+    fetchMovies(nextPage, itemsPerPage, sortOption, yearFilter, category);
   };
 
   return (
     <Layout onSortChange={handleSortChange}>
-      <div className="flex justify-between items-center mb-4">
-        <div>
-          <label className="mr-2">Sort By:</label>
+      <div className="flex justify-between items-center mb-4 flex-wrap gap-4">
+        <div className="flex items-center">
+          <label className="mr-2 text-white">Sort By:</label>
           <select
             value={sortOption}
             onChange={(e) => handleSortChange(e.target.value)}
-            className="bg-gray-700 text-white py-2 px-4 rounded"
+            className="bg-gray-700 text-white py-2 px-4 rounded-lg shadow-md transition duration-300 hover:bg-gray-600"
           >
             <option value="rating">Rating</option>
             <option value="releaseDate">Release Date</option>
             <option value="title">Title</option>
+            <option value="year">Year</option>
           </select>
         </div>
-        <div>
-          <label className="mr-2">Filter by Year:</label>
+        <div className="flex items-center">
+          <label className="mr-2 text-white">Filter by Year:</label>
           <input
             type="number"
             value={yearFilter}
             onChange={handleYearChange}
             placeholder="e.g., 2020"
-            className="bg-gray-700 text-white py-2 px-4 rounded"
+            className="bg-gray-700 text-white py-2 px-4 rounded-lg shadow-md transition duration-300 hover:bg-gray-600"
           />
+        </div>
+        <div className="flex items-center">
+          <label className="mr-2 text-white">Category:</label>
+          <select
+            value={category}
+            onChange={handleCategoryChange}
+            className="bg-gray-700 text-white py-2 px-4 rounded-lg shadow-md transition duration-300 hover:bg-gray-600"
+          >
+            <option value="all">All</option>
+            <option value="action">Action</option>
+            <option value="comedy">Comedy</option>
+            <option value="drama">Drama</option>
+            <option value="horror">Horror</option>
+            <option value="romance">Romance</option>
+            <option value="sci-fi">Sci-Fi</option>
+            <option value="thriller">Thriller</option>
+            {/* Add more categories as needed */}
+          </select>
         </div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -78,18 +106,18 @@ export default function Home() {
           <MovieCard key={movie.tconst} movie={movie} />
         ))}
       </div>
-      {loading && <div className="text-center mt-8">Loading more movies...</div>}
+      {loading && <div className="text-center mt-8 text-white">Loading more movies...</div>}
       <div className="text-center mt-8">
         <button
           onClick={loadMoreMovies}
-          className="bg-blue-600 hover:bg-blue-800 text-white py-2 px-4 rounded"
+          className="bg-blue-600 hover:bg-blue-800 text-white py-2 px-4 rounded-lg shadow-md transition duration-300"
         >
           Load More
         </button>
         <select
           onChange={(e) => setItemsPerPage(Number(e.target.value))}
           value={itemsPerPage}
-          className="ml-4 py-2 px-4 rounded bg-gray-800 text-white"
+          className="ml-4 py-2 px-4 rounded-lg bg-gray-800 text-white shadow-md transition duration-300 hover:bg-gray-600"
         >
           <option value="20">Show 20</option>
           <option value="25">Show 25</option>
