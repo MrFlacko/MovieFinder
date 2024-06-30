@@ -47,6 +47,38 @@ download_datasets() {
     echo -e "${GREEN}Dataset download and extraction completed.${NC}"
 }
 
+# Preprocess the name.basics.tsv file to handle unescaped characters and correct column counts
+preprocess_name_basics() {
+    file="databases/name.basics.tsv"
+    echo -e "${BLUE}Preprocessing $file...${NC}"
+
+    if [[ ! -f "$file" ]]; then
+        echo -e "${RED}Error: File $file does not exist.${NC}"
+        return 1
+    fi
+
+    tmp_file=$(mktemp)
+
+    awk 'BEGIN {FS=OFS="\t"} {
+        gsub(/"/, ""); # Remove unescaped double quotes
+        if (NF > 6) {
+            NF = 6;
+        } else if (NF < 6) {
+            for (i = NF + 1; i <= 6; i++) {
+                $i = "";
+            }
+        }
+    } 1' "$file" > "$tmp_file"
+
+    if [[ -s "$tmp_file" ]]; then
+        mv "$tmp_file" "$file"
+        echo -e "${GREEN}Finished preprocessing $file${NC}"
+    else
+        echo -e "${RED}Error processing $file: temp file is empty or does not exist${NC}"
+        rm -f "$tmp_file"
+    fi
+}
+
 # Preprocess a single TSV file to handle special characters and adjust column counts
 preprocess_file() {
     file=$1
@@ -121,16 +153,23 @@ preprocess_files() {
 # Preprocess specific TSV file for testing mode
 preprocess_files_testing() {
     echo -e "${BLUE}Starting preprocessing of TSV file for testing...${NC}"
-    cd databases
-    preprocess_file "name.basics.tsv"
-    cd ..
+    file="databases/name.basics.tsv"
+
+    # Add debug check
+    if [[ -f "$file" ]]; then
+        echo -e "${GREEN}$file file exists.${NC}"
+    else
+        echo -e "${RED}$file file does not exist.${NC}"
+    fi
+
+    preprocess_name_basics
     echo -e "${GREEN}Preprocessing of TSV file for testing completed.${NC}"
 }
 
 # Create SQLite database schema
 create_sqlite_schema() {
     echo -e "${BLUE}Creating SQLite database schema...${NC}"
-    sqlite3 imdb.db <<EOF
+    sqlite3 databases/imdb.db <<EOF
 DROP TABLE IF EXISTS title_basics;
 DROP TABLE IF EXISTS title_akas;
 DROP TABLE IF EXISTS title_principals;
@@ -142,10 +181,61 @@ DROP TABLE IF EXISTS name_basics;
 CREATE TABLE name_basics (
     nconst TEXT PRIMARY KEY,
     primaryName TEXT,
-    birthYear TEXT,
-    deathYear TEXT,
+    birthYear INTEGER,
+    deathYear INTEGER,
     primaryProfession TEXT,
     knownForTitles TEXT
+);
+
+CREATE TABLE title_basics (
+    tconst TEXT PRIMARY KEY,
+    titleType TEXT,
+    primaryTitle TEXT,
+    originalTitle TEXT,
+    isAdult INTEGER,
+    startYear INTEGER,
+    endYear INTEGER,
+    runtimeMinutes INTEGER,
+    genres TEXT
+);
+
+CREATE TABLE title_akas (
+    titleId TEXT,
+    ordering INTEGER,
+    title TEXT,
+    region TEXT,
+    language TEXT,
+    types TEXT,
+    attributes TEXT,
+    isOriginalTitle INTEGER
+);
+
+CREATE TABLE title_principals (
+    tconst TEXT,
+    ordering INTEGER,
+    nconst TEXT,
+    category TEXT,
+    job TEXT,
+    characters TEXT
+);
+
+CREATE TABLE title_ratings (
+    tconst TEXT PRIMARY KEY,
+    averageRating REAL,
+    numVotes INTEGER
+);
+
+CREATE TABLE title_crew (
+    tconst TEXT PRIMARY KEY,
+    directors TEXT,
+    writers TEXT
+);
+
+CREATE TABLE title_episode (
+    tconst TEXT PRIMARY KEY,
+    parentTconst TEXT,
+    seasonNumber INTEGER,
+    episodeNumber INTEGER
 );
 EOF
     echo -e "${GREEN}SQLite database schema created.${NC}"
@@ -156,42 +246,72 @@ import_to_sqlite() {
     echo -e "${BLUE}Starting import of data into SQLite database...${NC}"
     cd databases
 
-    create_sqlite_schema
-
     start_time=$(date +%s)
     echo -e "${YELLOW}Setting PRAGMA settings for faster imports...${NC}"
-    sqlite3 ../imdb.db <<EOF
+    sqlite3 imdb.db <<EOF
 PRAGMA journal_mode = OFF;
 PRAGMA synchronous = OFF;
 PRAGMA foreign_keys = OFF;
-BEGIN TRANSACTION;
 EOF
 
-    table_name="name_basics"
-    echo -e "${YELLOW}Importing name.basics.tsv into $table_name...${NC}"
+    table="name_basics"
+    file="${PWD}/name.basics.tsv"
+    echo -e "${YELLOW}Importing ${file} into $table...${NC}"
+
+    # Import the data
     {
         echo ".mode tabs"
-        echo ".import name.basics.tsv $table_name"
-    } | sqlite3 ../imdb.db 2>> import_errors.log
+        echo ".import \"$file\" $table"
+    } | sqlite3 imdb.db 2>> import_errors.log
 
+    # Check if the import command succeeded
     if [[ $? -eq 0 ]]; then
-        sqlite3 ../imdb.db <<EOF
-COMMIT;
+        echo -e "${GREEN}Data import for $table completed.${NC}"
+    else
+        echo -e "${RED}Error importing ${file}, aborting...${NC}"
+        cat import_errors.log
+        exit 1
+    fi
+
+    sqlite3 imdb.db <<EOF
 PRAGMA journal_mode = DELETE;
 PRAGMA synchronous = FULL;
 PRAGMA foreign_keys = ON;
 EOF
-        echo -e "${GREEN}Data import into SQLite database completed in $(( $(date +%s) - $start_time )) seconds${NC}"
-    else
-        echo -e "${RED}Error importing name.basics.tsv, aborting...${NC}"
-        sqlite3 ../imdb.db "ROLLBACK;"
-        echo -e "${RED}Import aborted. Check import_errors.log for details.${NC}"
-    fi
+
+    end_time=$(date +%s)
+    duration=$(( end_time - start_time ))
+    echo -e "${GREEN}Data import into SQLite database completed in $duration seconds${NC}"
 
     cd ..
     echo -e "${GREEN}All datasets have been downloaded, extracted, preprocessed, and imported into imdb.db.${NC}"
 }
 
+# Check the integrity of the required files
+check_files() {
+    echo -e "${BLUE}Checking integrity of required files...${NC}"
+    cd databases
+
+    for dataset in "${datasets[@]}"; do
+        filename="$dataset.tsv"
+        if [[ -f "$filename" ]]; then
+            echo -e "${GREEN}$filename exists.${NC}"
+        else
+            echo -e "${RED}$filename is missing.${NC}"
+            return 1
+        fi
+    done
+
+    # Checksum verification
+    for dataset in "${datasets[@]}"; do
+        filename="$dataset.tsv"
+        checksum=$(md5sum "$filename" | awk '{print $1}')
+        echo -e "${YELLOW}Checksum for $filename: $checksum${NC}"
+    done
+
+    cd ..
+    echo -e "${GREEN}File integrity check completed.${NC}"
+}
 
 # Main script execution
 if [[ "$1" == "--testing" ]]; then
@@ -199,10 +319,25 @@ if [[ "$1" == "--testing" ]]; then
     install_required_tools
     download_datasets "$1"
     preprocess_files_testing
+    create_sqlite_schema
     import_to_sqlite
+elif [[ "$1" == "--check" ]]; then
+    echo -e "${YELLOW}Running in check mode...${NC}"
+    check_files
 else
     install_required_tools
     download_datasets "$1"
     preprocess_files
+    create_sqlite_schema
     import_to_sqlite
 fi
+
+# Display import errors if any
+if [[ -s databases/import_errors.log ]]; then
+    echo -e "${RED}Import errors:${NC}"
+    cat databases/import_errors.log
+fi
+
+# Debugging info
+echo -e "${BLUE}Listing databases directory content:${NC}"
+ls -l databases
