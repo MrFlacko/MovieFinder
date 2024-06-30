@@ -31,7 +31,12 @@ base_url="https://datasets.imdbws.com/"
 # Download and extract datasets if needed
 download_datasets() {
     echo -e "${BLUE}Starting dataset download...${NC}"
-    mkdir -p databases && cd databases
+    mkdir -p databases
+
+    cd databases
+    if [[ "$1" == "--testing" ]]; then
+        datasets=("name.basics")
+    fi
 
     for dataset in "${datasets[@]}"; do
         filename="$dataset.tsv"
@@ -136,10 +141,13 @@ PRAGMA synchronous = OFF;
 PRAGMA foreign_keys = OFF;
 EOF
 
+    if [[ "$1" == "--testing" ]]; then
+        datasets=("name.basics")
+    fi
+
     for dataset in "${datasets[@]}"; do
         table=$(echo "$dataset" | sed 's/\./_/g')
         file="${PWD}/${dataset}.tsv"
-        [[ "$1" == "--testing" && "$dataset" != "name.basics" ]] && continue
         echo -e "${YELLOW}Importing ${file} into $table...${NC}"
 
         # Import the data
