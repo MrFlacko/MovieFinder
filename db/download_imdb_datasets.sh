@@ -1,13 +1,20 @@
 #!/bin/bash
 
+# Define color codes
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
 # Ensure required tools are installed
 install_required_tools() {
-    echo "Checking for required tools..."
-    command -v wget >/dev/null || { echo "Installing wget..."; sudo apt-get install -y wget; }
-    command -v pv >/dev/null || { echo "Installing pv..."; sudo apt-get install -y pv; }
-    command -v sqlite3 >/dev/null || { echo "Installing sqlite3..."; sudo apt-get install -y sqlite3; }
-    command -v parallel >/dev/null || { echo "Installing parallel..."; sudo apt-get install -y parallel; }
-    echo "All required tools are installed."
+    echo -e "${BLUE}Checking for required tools...${NC}"
+    command -v wget >/dev/null || { echo -e "${YELLOW}Installing wget...${NC}"; sudo apt-get install -y wget; }
+    command -v pv >/dev/null || { echo -e "${YELLOW}Installing pv...${NC}"; sudo apt-get install -y pv; }
+    command -v sqlite3 >/dev/null || { echo -e "${YELLOW}Installing sqlite3...${NC}"; sudo apt-get install -y sqlite3; }
+    command -v parallel >/dev/null || { echo -e "${YELLOW}Installing parallel...${NC}"; sudo apt-get install -y parallel; }
+    echo -e "${GREEN}All required tools are installed.${NC}"
 }
 
 # Define datasets and their URLs
@@ -24,42 +31,81 @@ base_url="https://datasets.imdbws.com/"
 
 # Download and extract datasets if needed
 download_datasets() {
-    echo "Starting dataset download..."
+    echo -e "${BLUE}Starting dataset download...${NC}"
     mkdir -p databases && cd databases
 
     for dataset in "${datasets[@]}"; do
         filename="$dataset.tsv"
         url="${base_url}${dataset}.tsv.gz"
         [[ "$1" == "--redownload" ]] || [[ ! -f "$filename" ]] && {
-            echo "Downloading $filename..."
+            echo -e "${YELLOW}Downloading $filename...${NC}"
             wget -qO- "$url" | pv -s $(wget --spider "$url" 2>&1 | grep Length | awk '{print $2}') | gunzip > "$filename"
-        } || echo "$filename already exists, skipping download."
+        } || echo -e "${GREEN}$filename already exists, skipping download.${NC}"
     done
 
     cd ..
-    echo "Dataset download and extraction completed."
+    echo -e "${GREEN}Dataset download and extraction completed.${NC}"
 }
 
 # Preprocess a single TSV file to handle special characters and adjust column counts
 preprocess_file() {
     file=$1
-    echo "Preprocessing $file..."
+    echo -e "${BLUE}Preprocessing $file...${NC}"
     start_time=$(date +%s)
     total_lines=$(wc -l < "$file")
     tmp_file=$(mktemp)
-    awk 'BEGIN {FS=OFS="\t"} {for(i=1; i<=NF; i++) gsub(/"/, "", $i); if(NF<3) $3=""} 1' "$file" | pv -l -s "$total_lines" > "$tmp_file"
+
+    # Determine the expected number of columns based on the file name
+    case "$file" in
+        *name.basics.tsv)
+            expected_columns=6
+            ;;
+        *title.basics.tsv)
+            expected_columns=9
+            ;;
+        *title.akas.tsv)
+            expected_columns=8
+            ;;
+        *title.principals.tsv)
+            expected_columns=6
+            ;;
+        *title.ratings.tsv)
+            expected_columns=3
+            ;;
+        *title.crew.tsv)
+            expected_columns=3
+            ;;
+        *title.episode.tsv)
+            expected_columns=4
+            ;;
+        *)
+            echo -e "${RED}Unknown file type: $file${NC}"
+            return 1
+            ;;
+    esac
+
+    awk -v expected_columns="$expected_columns" 'BEGIN {FS=OFS="\t"} {
+        if (NF > expected_columns) {
+            NF = expected_columns
+        } else if (NF < expected_columns) {
+            for (i = NF + 1; i <= expected_columns; i++) {
+                $i = ""
+            }
+        }
+    } 1' "$file" | pv -l -s "$total_lines" > "$tmp_file"
+
     if [[ -s "$tmp_file" ]]; then
         mv "$tmp_file" "$file"
-        echo "Finished preprocessing $file in $(( $(date +%s) - $start_time )) seconds"
+        echo -e "${GREEN}Finished preprocessing $file in $(( $(date +%s) - $start_time )) seconds${NC}"
     else
-        echo "Error processing $file: temp file is empty or does not exist"
+        echo -e "${RED}Error processing $file: temp file is empty or does not exist${NC}"
         rm -f "$tmp_file"
     fi
 }
 
 # Preprocess TSV files to handle special characters
 preprocess_files() {
-    echo "Starting preprocessing of TSV files..."
+    echo -e "${BLUE}Starting preprocessing of TSV files...${NC}"
     cd databases
 
     # Export function for use by parallel
@@ -69,12 +115,12 @@ preprocess_files() {
     find . -name '*.tsv' | parallel preprocess_file
 
     cd ..
-    echo "Preprocessing of TSV files completed."
+    echo -e "${GREEN}Preprocessing of TSV files completed.${NC}"
 }
 
 # Create SQLite database schema
 create_sqlite_schema() {
-    echo "Creating SQLite database schema..."
+    echo -e "${BLUE}Creating SQLite database schema...${NC}"
     sqlite3 imdb.db <<EOF
 DROP TABLE IF EXISTS title_basics;
 DROP TABLE IF EXISTS title_akas;
@@ -113,7 +159,8 @@ CREATE TABLE title_principals (
     nconst TEXT,
     category TEXT,
     job TEXT,
-    characters TEXT
+    characters TEXT,
+    PRIMARY KEY (tconst, ordering, nconst)
 );
 
 CREATE TABLE title_ratings (
@@ -144,36 +191,53 @@ CREATE TABLE name_basics (
     knownForTitles TEXT
 );
 EOF
-    echo "SQLite database schema created."
+    echo -e "${GREEN}SQLite database schema created.${NC}"
 }
 
-# Import data into SQLite database
+# Import data into SQLite database using bulk inserts
 import_to_sqlite() {
-    echo "Starting import of data into SQLite database..."
+    echo -e "${BLUE}Starting import of data into SQLite database...${NC}"
     cd databases
 
     create_sqlite_schema
 
     start_time=$(date +%s)
-    echo "Setting PRAGMA journal_mode to OFF..."
-    sqlite3 imdb.db "PRAGMA journal_mode = OFF;"
-    echo "Beginning transaction..."
-    sqlite3 imdb.db "BEGIN TRANSACTION;"
+    echo -e "${YELLOW}Setting PRAGMA settings for faster imports...${NC}"
+    sqlite3 ../imdb.db <<EOF
+PRAGMA journal_mode = OFF;
+PRAGMA synchronous = OFF;
+PRAGMA foreign_keys = OFF;
+BEGIN TRANSACTION;
+EOF
 
     for dataset in "${datasets[@]}"; do
         table_name="${dataset//./_}"
-        echo "Importing $dataset.tsv into $table_name..."
-        sqlite3 imdb.db ".mode tabs" ".import $dataset.tsv $table_name"
+        echo -e "${YELLOW}Importing $dataset.tsv into $table_name...${NC}"
+        {
+            echo ".mode tabs"
+            echo ".import $dataset.tsv $table_name"
+        } | sqlite3 ../imdb.db 2> import_errors.log || {
+            echo -e "${RED}Error importing $dataset.tsv, retrying...${NC}"
+            {
+                echo ".mode tabs"
+                echo ".import $dataset.tsv $table_name"
+            } | sqlite3 ../imdb.db 2>> import_errors.log
+        }
     done
 
-    echo "Committing transaction..."
-    sqlite3 imdb.db "COMMIT;"
+    sqlite3 ../imdb.db <<EOF
+COMMIT;
+PRAGMA journal_mode = DELETE;
+PRAGMA synchronous = FULL;
+PRAGMA foreign_keys = ON;
+EOF
+
     end_time=$(date +%s)
     duration=$(( end_time - start_time ))
-    echo "Data import into SQLite database completed in $duration seconds"
+    echo -e "${GREEN}Data import into SQLite database completed in $duration seconds${NC}"
 
     cd ..
-    echo "All datasets have been downloaded, extracted, preprocessed, and imported into imdb.db."
+    echo -e "${GREEN}All datasets have been downloaded, extracted, preprocessed, and imported into imdb.db.${NC}"
 }
 
 # Main script execution
