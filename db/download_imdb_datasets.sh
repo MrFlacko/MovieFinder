@@ -10,10 +10,9 @@ NC='\033[0m' # No Color
 # Ensure required tools are installed
 install_required_tools() {
     echo -e "${BLUE}Checking for required tools...${NC}"
-    command -v wget >/dev/null || { echo -e "${YELLOW}Installing wget...${NC}"; sudo apt-get install -y wget; }
-    command -v pv >/dev/null || { echo -e "${YELLOW}Installing pv...${NC}"; sudo apt-get install -y pv; }
-    command -v sqlite3 >/dev/null || { echo -e "${YELLOW}Installing sqlite3...${NC}"; sudo apt-get install -y sqlite3; }
-    command -v parallel >/dev/null || { echo -e "${YELLOW}Installing parallel...${NC}"; sudo apt-get install -y parallel; }
+    for tool in wget pv sqlite3 parallel; do
+        command -v $tool >/dev/null || { echo -e "${YELLOW}Installing $tool...${NC}"; sudo apt-get install -y $tool; }
+    done
     echo -e "${GREEN}All required tools are installed.${NC}"
 }
 
@@ -37,10 +36,12 @@ download_datasets() {
     for dataset in "${datasets[@]}"; do
         filename="$dataset.tsv"
         url="${base_url}${dataset}.tsv.gz"
-        [[ "$1" == "--redownload" ]] || [[ ! -f "$filename" ]] && {
+        if [[ "$1" == "--redownload" || ! -f "$filename" ]]; then
             echo -e "${YELLOW}Downloading $filename...${NC}"
             wget -qO- "$url" | pv -s $(wget --spider "$url" 2>&1 | grep Length | awk '{print $2}') | gunzip > "$filename"
-        } || echo -e "${GREEN}$filename already exists, skipping download.${NC}"
+        else
+            echo -e "${GREEN}$filename already exists, skipping download.${NC}"
+        fi
     done
 
     cd ..
