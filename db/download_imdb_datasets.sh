@@ -118,6 +118,15 @@ preprocess_files() {
     echo -e "${GREEN}Preprocessing of TSV files completed.${NC}"
 }
 
+# Preprocess specific TSV file for testing mode
+preprocess_files_testing() {
+    echo -e "${BLUE}Starting preprocessing of TSV file for testing...${NC}"
+    cd databases
+    preprocess_file "name.basics.tsv"
+    cd ..
+    echo -e "${GREEN}Preprocessing of TSV file for testing completed.${NC}"
+}
+
 # Create SQLite database schema
 create_sqlite_schema() {
     echo -e "${BLUE}Creating SQLite database schema...${NC}"
@@ -129,58 +138,6 @@ DROP TABLE IF EXISTS title_ratings;
 DROP TABLE IF EXISTS title_crew;
 DROP TABLE IF EXISTS title_episode;
 DROP TABLE IF EXISTS name_basics;
-
-CREATE TABLE title_basics (
-    tconst TEXT PRIMARY KEY,
-    titleType TEXT,
-    primaryTitle TEXT,
-    originalTitle TEXT,
-    isAdult INTEGER,
-    startYear TEXT,
-    endYear TEXT,
-    runtimeMinutes TEXT,
-    genres TEXT
-);
-
-CREATE TABLE title_akas (
-    titleId TEXT,
-    ordering INTEGER,
-    title TEXT,
-    region TEXT,
-    language TEXT,
-    types TEXT,
-    attributes TEXT,
-    isOriginalTitle INTEGER
-);
-
-CREATE TABLE title_principals (
-    tconst TEXT,
-    ordering INTEGER,
-    nconst TEXT,
-    category TEXT,
-    job TEXT,
-    characters TEXT,
-    PRIMARY KEY (tconst, ordering, nconst)
-);
-
-CREATE TABLE title_ratings (
-    tconst TEXT PRIMARY KEY,
-    averageRating REAL,
-    numVotes INTEGER
-);
-
-CREATE TABLE title_crew (
-    tconst TEXT PRIMARY KEY,
-    directors TEXT,
-    writers TEXT
-);
-
-CREATE TABLE title_episode (
-    tconst TEXT PRIMARY KEY,
-    parentTconst TEXT,
-    seasonNumber INTEGER,
-    episodeNumber INTEGER
-);
 
 CREATE TABLE name_basics (
     nconst TEXT PRIMARY KEY,
@@ -210,38 +167,42 @@ PRAGMA foreign_keys = OFF;
 BEGIN TRANSACTION;
 EOF
 
-    for dataset in "${datasets[@]}"; do
-        table_name="${dataset//./_}"
-        echo -e "${YELLOW}Importing $dataset.tsv into $table_name...${NC}"
-        {
-            echo ".mode tabs"
-            echo ".import $dataset.tsv $table_name"
-        } | sqlite3 ../imdb.db 2> import_errors.log || {
-            echo -e "${RED}Error importing $dataset.tsv, retrying...${NC}"
-            {
-                echo ".mode tabs"
-                echo ".import $dataset.tsv $table_name"
-            } | sqlite3 ../imdb.db 2>> import_errors.log
-        }
-    done
+    table_name="name_basics"
+    echo -e "${YELLOW}Importing name.basics.tsv into $table_name...${NC}"
+    {
+        echo ".mode tabs"
+        echo ".import name.basics.tsv $table_name"
+    } | sqlite3 ../imdb.db 2>> import_errors.log
 
-    sqlite3 ../imdb.db <<EOF
+    if [[ $? -eq 0 ]]; then
+        sqlite3 ../imdb.db <<EOF
 COMMIT;
 PRAGMA journal_mode = DELETE;
 PRAGMA synchronous = FULL;
 PRAGMA foreign_keys = ON;
 EOF
-
-    end_time=$(date +%s)
-    duration=$(( end_time - start_time ))
-    echo -e "${GREEN}Data import into SQLite database completed in $duration seconds${NC}"
+        echo -e "${GREEN}Data import into SQLite database completed in $(( $(date +%s) - $start_time )) seconds${NC}"
+    else
+        echo -e "${RED}Error importing name.basics.tsv, aborting...${NC}"
+        sqlite3 ../imdb.db "ROLLBACK;"
+        echo -e "${RED}Import aborted. Check import_errors.log for details.${NC}"
+    fi
 
     cd ..
     echo -e "${GREEN}All datasets have been downloaded, extracted, preprocessed, and imported into imdb.db.${NC}"
 }
 
+
 # Main script execution
-install_required_tools
-download_datasets "$1"
-preprocess_files
-import_to_sqlite
+if [[ "$1" == "--testing" ]]; then
+    echo -e "${YELLOW}Running in testing mode, only processing name.basics...${NC}"
+    install_required_tools
+    download_datasets "$1"
+    preprocess_files_testing
+    import_to_sqlite
+else
+    install_required_tools
+    download_datasets "$1"
+    preprocess_files
+    import_to_sqlite
+fi
