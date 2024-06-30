@@ -1,4 +1,3 @@
-// /pages/index.js
 import Layout from '../components/Layout';
 import MovieCard from '../components/MovieCard';
 import { useState, useEffect } from 'react';

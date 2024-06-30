@@ -1,14 +1,15 @@
-const sqlite3 = require('sqlite3').verbose();
+const Database = require('better-sqlite3');
 const path = require('path');
+const fs = require('fs');
 
-// Connect to the database
 const dbPath = path.resolve(__dirname, 'databases', 'imdb.db');
-const db = new sqlite3.Database(dbPath, (err) => {
-    if (err) {
-        console.error('Could not connect to database', err);
-    } else {
-        console.log('Connected to database');
-    }
-});
+console.log('Resolved database path:', dbPath); // Log the resolved path
+
+if (!fs.existsSync(dbPath)) {
+  console.error('Database file does not exist at path:', dbPath);
+  throw new Error('Database file does not exist');
+}
+
+const db = new Database(dbPath, { verbose: console.log });
 
 module.exports = db;
