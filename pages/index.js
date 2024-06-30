@@ -1,3 +1,4 @@
+// /pages/index.js
 import Layout from '../components/Layout';
 import MovieCard from '../components/MovieCard';
 import { useState, useEffect } from 'react';
@@ -6,9 +7,9 @@ export default function Home() {
   const [movies, setMovies] = useState([]);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(20); // Default to 20
-  const [sortOption, setSortOption] = useState('rating'); // Default to rating
-  const [yearFilter, setYearFilter] = useState(''); // Default to no year filter
+  const [itemsPerPage, setItemsPerPage] = useState(20);
+  const [sortOption, setSortOption] = useState('rating');
+  const [yearFilter, setYearFilter] = useState('');
 
   useEffect(() => {
     fetchMovies(1, itemsPerPage, sortOption, yearFilter);
@@ -18,7 +19,6 @@ export default function Home() {
     setLoading(true);
     const res = await fetch(`/api/movies?page=${page}&limit=${limit}&sort=${sort}&year=${year}`);
     const data = await res.json();
-
     if (Array.isArray(data)) {
       setMovies(page === 1 ? data : [...movies, ...data]);
     } else {
@@ -30,7 +30,7 @@ export default function Home() {
   const handleSortChange = (option) => {
     setSortOption(option);
     setCurrentPage(1);
-    setMovies([]); // Clear current movies to load sorted results
+    setMovies([]);
     fetchMovies(1, itemsPerPage, option, yearFilter);
   };
 
@@ -38,7 +38,7 @@ export default function Home() {
     const year = event.target.value;
     setYearFilter(year);
     setCurrentPage(1);
-    setMovies([]); // Clear current movies to load filtered results
+    setMovies([]);
     fetchMovies(1, itemsPerPage, sortOption, year);
   };
 
