@@ -1,4 +1,3 @@
-// /api/trailer.js
 import axios from 'axios';
 
 export default async function handler(req, res) {
@@ -18,7 +17,7 @@ export default async function handler(req, res) {
 
     const video = response.data.items[0];
     const trailerUrl = `https://www.youtube.com/embed/${video.id.videoId}`;
-    
+
     res.status(200).json({ trailerUrl });
   } catch (error) {
     console.error('Error fetching trailer:', error);
