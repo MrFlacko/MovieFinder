@@ -164,7 +164,6 @@ import_to_sqlite() {
 PRAGMA journal_mode = OFF;
 PRAGMA synchronous = OFF;
 PRAGMA foreign_keys = OFF;
-PRAGMA threads = 4;
 EOF
 
     if [[ "$1" == "--testing" ]]; then
