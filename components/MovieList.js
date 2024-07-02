@@ -4,7 +4,7 @@ export default function MovieList() {
   const [movies, setMovies] = useState([]);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(16);
+  const [itemsPerPage, setItemsPerPage] = useState(32); // Ensure this is 32
   const [sortOption, setSortOption] = useState('title');
   const [category, setCategory] = useState('all');
 
@@ -95,7 +95,7 @@ export default function MovieList() {
           </select>
         </div>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-8 gap-4">
         {movies.map(movie => (
           <div key={movie.title} className="movie-card bg-gray-800 text-white rounded-lg p-4 shadow-md hover:shadow-lg transition duration-300">
             <img src={movie.poster} alt={`${movie.title} Poster`} className="w-full h-auto rounded"/>
@@ -103,18 +103,6 @@ export default function MovieList() {
           </div>
         ))}
         {loading && <div className="loading mt-4 text-white">Loading more movies...</div>}
-        <div className="load-more-container mt-4 text-center">
-          <button onClick={() => setCurrentPage(currentPage + 1)} className="bg-blue-600 hover:bg-blue-800 text-white py-2 px-4 rounded-lg shadow-md transition duration-300">
-            Load More
-          </button>
-          <select onChange={(e) => setItemsPerPage(Number(e.target.value))} value={itemsPerPage} className="ml-4 py-2 px-4 rounded-lg bg-gray-800 text-white shadow-md transition duration-300 hover:bg-gray-600">
-            <option value="16">Show 16</option>
-            <option value="25">Show 25</option>
-            <option value="50">Show 50</option>
-            <option value="100">Show 100</option>
-            <option value="200">Show 200</option>
-          </select>
-        </div>
       </div>
     </div>
   );

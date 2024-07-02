@@ -6,7 +6,7 @@ export default function Home() {
   const [movies, setMovies] = useState([]);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(20);
+  const [itemsPerPage, setItemsPerPage] = useState(32); // Ensure this is 32
   const [sortOption, setSortOption] = useState('rating');
   const [yearFilter, setYearFilter] = useState('');
   const [category, setCategory] = useState('all');
@@ -17,14 +17,19 @@ export default function Home() {
 
   const fetchMovies = async (page, limit, sort, year, category) => {
     setLoading(true);
-    const res = await fetch(`/api/movies?page=${page}&limit=${limit}&sort=${sort}&year=${year}&category=${category}`);
-    const data = await res.json();
-    if (Array.isArray(data)) {
-      setMovies(page === 1 ? data : [...movies, ...data]);
-    } else {
-      console.error('Error: Fetched data is not an array:', data);
+    try {
+      const res = await fetch(`/api/movies?page=${page}&limit=${limit}&sort=${sort}&year=${year}&category=${category}`);
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        setMovies(prevMovies => (page === 1 ? data : [...prevMovies, ...data]));
+      } else {
+        console.error('Error: Fetched data is not an array:', data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch movies:', error);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleSortChange = (option) => {
@@ -53,34 +58,24 @@ export default function Home() {
   const loadMoreMovies = () => {
     const nextPage = currentPage + 1;
     setCurrentPage(nextPage);
-    fetchMovies(nextPage, itemsPerPage, sortOption, yearFilter, category);
+    fetchMovies(nextPage, itemsPerPage, sortOption, yearFilter, category); // Ensure this uses itemsPerPage
   };
 
   return (
-    <Layout onSortChange={handleSortChange}>
-      <div className="flex justify-between items-center mb-4 flex-wrap gap-4">
+    <Layout>
+      <div className="controls mb-4 flex flex-wrap items-center gap-4">
         <div className="flex items-center">
-          <label className="mr-2 text-white">Sort By:</label>
+          <label className="mr-2 text-white">Sort by:</label>
           <select
             value={sortOption}
             onChange={(e) => handleSortChange(e.target.value)}
             className="bg-gray-700 text-white py-2 px-4 rounded-lg shadow-md transition duration-300 hover:bg-gray-600"
           >
-            <option value="rating">Rating</option>
-            <option value="releaseDate">Release Date</option>
             <option value="title">Title</option>
+            <option value="release_date">Release Date</option>
+            <option value="rating">Rating</option>
             <option value="year">Year</option>
           </select>
-        </div>
-        <div className="flex items-center">
-          <label className="mr-2 text-white">Filter by Year:</label>
-          <input
-            type="number"
-            value={yearFilter}
-            onChange={handleYearChange}
-            placeholder="e.g., 2020"
-            className="bg-gray-700 text-white py-2 px-4 rounded-lg shadow-md transition duration-300 hover:bg-gray-600"
-          />
         </div>
         <div className="flex items-center">
           <label className="mr-2 text-white">Category:</label>
@@ -97,11 +92,10 @@ export default function Home() {
             <option value="romance">Romance</option>
             <option value="sci-fi">Sci-Fi</option>
             <option value="thriller">Thriller</option>
-            {/* Add more categories as needed */}
           </select>
         </div>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="w-full px-0 mx-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-8 gap-4">
         {movies.map(movie => (
           <MovieCard key={movie.tconst} movie={movie} />
         ))}
@@ -115,12 +109,16 @@ export default function Home() {
           Load More
         </button>
         <select
-          onChange={(e) => setItemsPerPage(Number(e.target.value))}
+          onChange={(e) => {
+            setItemsPerPage(Number(e.target.value));
+            setCurrentPage(1);
+            setMovies([]);
+            fetchMovies(1, Number(e.target.value), sortOption, yearFilter, category);
+          }}
           value={itemsPerPage}
           className="ml-4 py-2 px-4 rounded-lg bg-gray-800 text-white shadow-md transition duration-300 hover:bg-gray-600"
         >
-          <option value="20">Show 20</option>
-          <option value="25">Show 25</option>
+          <option value="32">Show 32</option>
           <option value="50">Show 50</option>
           <option value="100">Show 100</option>
         </select>

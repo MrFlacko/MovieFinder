@@ -12,10 +12,10 @@ const MovieCard = ({ movie }) => {
       try {
         const response = await fetch(`https://www.omdbapi.com/?t=${encodeURIComponent(movie.primaryTitle)}&apikey=${process.env.NEXT_PUBLIC_OMDB_API_KEY}`);
         const data = await response.json();
-        setPosterUrl(data.Poster !== 'N/A' ? data.Poster : '/placeholder.png');
+        setPosterUrl(data.Poster !== 'N/A' ? data.Poster : '');
       } catch (error) {
         console.error('Failed to fetch poster:', error);
-        setPosterUrl('/placeholder.png');
+        setPosterUrl('');
       }
     };
 
@@ -45,20 +45,27 @@ const MovieCard = ({ movie }) => {
     }
   };
 
+  // Conditionally render the movie card only if there is a poster
+  if (!posterUrl) return null;
+
   return (
     <div className={`movie-card ${expanded ? 'expanded' : ''}`}>
+      <h3>{movie.primaryTitle}</h3>
       <img src={posterUrl} alt={movie.primaryTitle} className="poster" />
       <div className="movie-info">
-        <h3>{movie.primaryTitle}</h3>
         <p>{movie.startYear}</p>
       </div>
       {expanded && (
-        <div className="expanded-content">
-          <div className="extra-info">
-            <p>Genres: {movie.genres}</p>
-            <p>Rating: {movie.averageRating}</p>
-            <p>Runtime: {movie.runtimeMinutes} minutes</p>
-            <p>Description: {movie.description}</p>
+        <div className="expanded-card show">
+          <div className="expanded-card-content">
+            <div className="movie-info">
+              <h3>{movie.primaryTitle}</h3>
+              <p>Year: {movie.startYear}</p>
+              <p>Genres: {Array.isArray(movie.genres) ? movie.genres.join(', ') : movie.genres}</p>
+              <p>Rating: {movie.averageRating}</p>
+              <p>Runtime: {movie.runtimeMinutes} minutes</p>
+              <p>Description: {movie.description}</p>
+            </div>
           </div>
           <div className="trailer-container">
             {loading ? (
@@ -67,7 +74,6 @@ const MovieCard = ({ movie }) => {
               trailerUrl ? (
                 <iframe
                   src={trailerUrl}
-                  frameBorder="0"
                   allow="autoplay; encrypted-media"
                   allowFullScreen
                   className="trailer-iframe"

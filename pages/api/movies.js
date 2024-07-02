@@ -39,7 +39,7 @@ const prepareStatements = () => {
 const statements = prepareStatements();
 
 export default async function handler(req, res) {
-  const { page = 1, limit = 20, sort = 'rating' } = req.query;
+  const { page = 1, limit = 32, sort = 'rating' } = req.query;
   const offset = (page - 1) * limit;
 
   let query;
