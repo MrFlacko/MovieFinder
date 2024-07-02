@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  moviefinder:
+    container_name: moviefinder_app
+    build: .
+    ports:
+      - "3000:3000"
+    working_dir: /app/MovieFinder
+    command: npm run dev
+    environment:
+      NODE_ENV: development
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 6G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
