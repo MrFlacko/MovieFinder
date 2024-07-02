@@ -6,7 +6,7 @@ export default function Home() {
   const [movies, setMovies] = useState([]);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(32); // Ensure this is 32
+  const [itemsPerPage, setItemsPerPage] = useState(32); 
   const [sortOption, setSortOption] = useState('rating');
   const [yearFilter, setYearFilter] = useState('');
   const [category, setCategory] = useState('all');
@@ -16,6 +16,7 @@ export default function Home() {
   }, [itemsPerPage, sortOption, yearFilter, category]);
 
   const fetchMovies = async (page, limit, sort, year, category) => {
+    console.log('Fetching movies:', { page, limit, sort, year, category }); 
     setLoading(true);
     try {
       const res = await fetch(`/api/movies?page=${page}&limit=${limit}&sort=${sort}&year=${year}&category=${category}`);
@@ -58,7 +59,7 @@ export default function Home() {
   const loadMoreMovies = () => {
     const nextPage = currentPage + 1;
     setCurrentPage(nextPage);
-    fetchMovies(nextPage, itemsPerPage, sortOption, yearFilter, category); // Ensure this uses itemsPerPage
+    fetchMovies(nextPage, itemsPerPage, sortOption, yearFilter, category); 
   };
 
   return (
