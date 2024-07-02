@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 
 export default function MovieList() {
   const [movies, setMovies] = useState([]);
+  
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(32); // Ensure this is 32

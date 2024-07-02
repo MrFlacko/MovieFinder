@@ -39,8 +39,9 @@ const prepareStatements = () => {
 const statements = prepareStatements();
 
 export default async function handler(req, res) {
-  const { page = 1, limit = 32, sort = 'rating' } = req.query;
-  const offset = (page - 1) * limit;
+  const { page = 0, limit = 32, sort = 'rating' } = req.query;
+  const offset = page * limit;
+  console.log(`Fetching movies: page=${page}, limit=${limit}, offset=${offset}`);
 
   let query;
   if (sort === 'rating') {
