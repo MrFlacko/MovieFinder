@@ -25,6 +25,7 @@ export default function Home() {
     const movie = await res.json();
     console.log('Random Movie:', movie);
     setRandomMovie(movie);
+    console.log(randomMovie)
   };
 
   useEffect(() => {
