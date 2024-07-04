@@ -25,7 +25,7 @@ export default function Home() {
     const movie = await res.json();
     console.log('Random Movie:', movie);
     setRandomMovie(movie);
-    console.log(randomMovie)
+    console.log(randomMovie == null)
   };
 
   useEffect(() => {
@@ -39,7 +39,11 @@ export default function Home() {
   return (
     <Layout>
       <div className="flex justify-between items-center mb-8">
-        <button onClick={fetchRandomMovie} className="btn-random-movie">
+      <button onClick={(e) => {
+            e.preventDefault();
+            fetchRandomMovie();
+            console.log("fetching movie");
+          }} className="btn-random-movie">
           Show Random Movie
         </button>
         <div className="flex items-center">
@@ -114,7 +118,7 @@ export default function Home() {
           <option value="100">Show 100</option>
         </select>
       </div>
-      {randomMovie && (
+      {randomMovie !== null && (
         <div className="random-movie mt-8">
           <MovieCard movie={randomMovie} />
           {randomMovie.trailerId ? (
