@@ -39,26 +39,32 @@ const prepareStatements = () => {
 const statements = prepareStatements();
 
 export default async function handler(req, res) {
-  const { page = 0, limit = 32, sort = 'rating' } = req.query;
+  const { page = 0, limit = 32, sort = 'rating', random } = req.query;
   const offset = page * limit;
-  console.log(`Fetching movies: page=${page}, limit=${limit}, offset=${offset}`);
+
+  if (random) {
+    const movies = db.prepare(`SELECT title_basics.tconst, primaryTitle, originalTitle, startYear, runtimeMinutes, genres, averageRating 
+                               FROM title_basics 
+                               JOIN title_ratings ON title_basics.tconst = title_ratings.tconst 
+                               WHERE title_basics.titleType = 'movie'`).all();
+    const randomMovie = movies[Math.floor(Math.random() * movies.length)];
+    console.log('Random Movie:', randomMovie);  // Add this line
+    res.status(200).json(randomMovie);
+    return;
+  }
 
   let query;
-  if (sort === 'rating') {
-    query = statements.rating;
-  } else if (sort === 'releaseDate') {
-    query = statements.releaseDate;
-  } else if (sort === 'title') {
-    query = statements.title;
-  } else {
-    query = statements.rating;
+  switch (sort) {
+    case 'releaseDate':
+      query = statements.releaseDate;
+      break;
+    case 'title':
+      query = statements.title;
+      break;
+    default:
+      query = statements.rating;
   }
 
-  try {
-    const movies = query.all(limit, offset);
-    res.status(200).json(movies);
-  } catch (error) {
-    console.error('Database query error:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
+  const movies = query.all(limit, offset);
+  res.status(200).json(movies);
 }

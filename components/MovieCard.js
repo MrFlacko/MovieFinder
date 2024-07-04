@@ -10,6 +10,7 @@ const MovieCard = ({ movie }) => {
   useEffect(() => {
     const fetchPoster = async () => {
       try {
+        console.log('Fetching poster for:', movie.primaryTitle);
         const response = await fetch(`https://www.omdbapi.com/?t=${encodeURIComponent(movie.primaryTitle)}&apikey=${process.env.NEXT_PUBLIC_OMDB_API_KEY}`);
         const data = await response.json();
         setPosterUrl(data.Poster !== 'N/A' ? data.Poster : '');
@@ -25,6 +26,7 @@ const MovieCard = ({ movie }) => {
   const fetchTrailer = async () => {
     setLoading(true);
     try {
+      console.log('Fetching trailer for:', movie.primaryTitle);
       const response = await fetch(`/api/trailer?title=${encodeURIComponent(movie.primaryTitle)}`);
       const data = await response.json();
       setTrailerUrl(data.trailerUrl);
@@ -45,8 +47,7 @@ const MovieCard = ({ movie }) => {
     }
   };
 
-  // Conditionally render the movie card only if there is a poster
-  if (!posterUrl) return null;
+  if (!posterUrl) return null; // Ensure poster is fetched
 
   return (
     <div className={`movie-card ${expanded ? 'expanded' : ''}`}>

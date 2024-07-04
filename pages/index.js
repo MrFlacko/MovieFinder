@@ -1,88 +1,77 @@
+import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import MovieCard from '../components/MovieCard';
-import { useState, useEffect } from 'react';
 
 export default function Home() {
   const [movies, setMovies] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [randomMovie, setRandomMovie] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(32); 
+  const [itemsPerPage, setItemsPerPage] = useState(32);
   const [sortOption, setSortOption] = useState('rating');
-  const [yearFilter, setYearFilter] = useState('');
+  const [yearFilter, setYearFilter] = useState('all');
   const [category, setCategory] = useState('all');
 
-  useEffect(() => {
-    fetchMovies(1, itemsPerPage, sortOption, yearFilter, category);
-  }, [itemsPerPage, sortOption, yearFilter, category]);
-
-  const fetchMovies = async (page, limit, sort, year, category) => {
-    console.log('Fetching movies:', { page, limit, sort, year, category }); 
+  const fetchMovies = async (page = 1, limit = 32, sort = 'rating', year = 'all', category = 'all') => {
     setLoading(true);
-    try {
-      const res = await fetch(`/api/movies?page=${page}&limit=${limit}&sort=${sort}&year=${year}&category=${category}`);
-      const data = await res.json();
-      if (Array.isArray(data)) {
-        setMovies(prevMovies => (page === 1 ? data : [...prevMovies, ...data]));
-      } else {
-        console.error('Error: Fetched data is not an array:', data);
-      }
-    } catch (error) {
-      console.error('Failed to fetch movies:', error);
-    } finally {
-      setLoading(false);
-    }
+    const res = await fetch(`/api/movies?page=${page - 1}&limit=${limit}&sort=${sort}&year=${year}&category=${category}`);
+    const data = await res.json();
+    setMovies(prevMovies => [...prevMovies, ...data]);
+    setLoading(false);
   };
 
-  const handleSortChange = (option) => {
-    setSortOption(option);
-    setCurrentPage(1);
-    setMovies([]);
-    fetchMovies(1, itemsPerPage, option, yearFilter, category);
+  const fetchRandomMovie = async () => {
+    const res = await fetch('/api/movies?random=true');
+    const movie = await res.json();
+    console.log('Random Movie:', movie);
+    setRandomMovie(movie);
   };
 
-  const handleYearChange = (event) => {
-    const year = event.target.value;
-    setYearFilter(year);
-    setCurrentPage(1);
-    setMovies([]);
-    fetchMovies(1, itemsPerPage, sortOption, year, category);
-  };
-
-  const handleCategoryChange = (event) => {
-    const category = event.target.value;
-    setCategory(category);
-    setCurrentPage(1);
-    setMovies([]);
-    fetchMovies(1, itemsPerPage, sortOption, yearFilter, category);
-  };
+  useEffect(() => {
+    fetchMovies(currentPage, itemsPerPage, sortOption, yearFilter, category);
+  }, [currentPage, itemsPerPage, sortOption, yearFilter, category]);
 
   const loadMoreMovies = () => {
-    const nextPage = currentPage + 1;
-    setCurrentPage(nextPage);
-    fetchMovies(nextPage, itemsPerPage, sortOption, yearFilter, category); 
+    setCurrentPage(prevPage => prevPage + 1);
   };
 
   return (
     <Layout>
-      <div className="controls mb-4 flex flex-wrap items-center gap-4">
+      <div className="flex justify-between items-center mb-8">
+        <button onClick={fetchRandomMovie} className="btn-random-movie">
+          Show Random Movie
+        </button>
         <div className="flex items-center">
-          <label className="mr-2 text-white">Sort by:</label>
+          <label className="mr-2 text-white">Sort By:</label>
           <select
             value={sortOption}
-            onChange={(e) => handleSortChange(e.target.value)}
+            onChange={(e) => setSortOption(e.target.value)}
             className="bg-gray-700 text-white py-2 px-4 rounded-lg shadow-md transition duration-300 hover:bg-gray-600"
           >
-            <option value="title">Title</option>
-            <option value="release_date">Release Date</option>
             <option value="rating">Rating</option>
-            <option value="year">Year</option>
+            <option value="releaseDate">Release Date</option>
+            <option value="title">Title</option>
+          </select>
+        </div>
+        <div className="flex items-center">
+          <label className="mr-2 text-white">Year:</label>
+          <select
+            value={yearFilter}
+            onChange={(e) => setYearFilter(e.target.value)}
+            className="bg-gray-700 text-white py-2 px-4 rounded-lg shadow-md transition duration-300 hover:bg-gray-600"
+          >
+            <option value="all">All</option>
+            <option value="2023">2023</option>
+            <option value="2022">2022</option>
+            <option value="2021">2021</option>
+            <option value="2020">2020</option>
           </select>
         </div>
         <div className="flex items-center">
           <label className="mr-2 text-white">Category:</label>
           <select
             value={category}
-            onChange={handleCategoryChange}
+            onChange={(e) => setCategory(e.target.value)}
             className="bg-gray-700 text-white py-2 px-4 rounded-lg shadow-md transition duration-300 hover:bg-gray-600"
           >
             <option value="all">All</option>
@@ -124,6 +113,25 @@ export default function Home() {
           <option value="100">Show 100</option>
         </select>
       </div>
+      {randomMovie && (
+        <div className="random-movie mt-8">
+          <MovieCard movie={randomMovie} />
+          {randomMovie.trailerId ? (
+            <iframe
+              width="560"
+              height="315"
+              src={`https://www.youtube.com/embed/${randomMovie.trailerId}`}
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              title="Random Movie Trailer"
+              className="mt-4"
+            ></iframe>
+          ) : (
+            <p className="mt-4 text-white">Trailer not available</p>
+          )}
+        </div>
+      )}
     </Layout>
   );
 }
