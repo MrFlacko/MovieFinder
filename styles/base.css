@@ -1,0 +1,19 @@
+/* 
+  Base Styles: This file contains the fundamental styles for the entire application, 
+  including body styles and Tailwind base styles.
+*/
+
+/* Tailwind base styles */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+    font-family: 'Roboto', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #121212;
+    color: #e0e0e0;
+    position: relative;
+    overflow-x: hidden;
+}

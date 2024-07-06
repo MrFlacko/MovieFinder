@@ -1,5 +1,11 @@
 // pages/_app.js
-import '../styles/globals.css';
+import '../styles/base.css';
+import '../styles/layout.css';
+import '../styles/header.css';
+import '../styles/buttons.css';
+import '../styles/movie-card.css';
+import '../styles/expanded-card.css';
+import '../styles/modal.css';
 
 function MyApp({ Component, pageProps }) {
   return <Component {...pageProps} />;

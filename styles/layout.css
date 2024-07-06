@@ -1,0 +1,21 @@
+/*
+  Layout Styles: This file manages the general layout styles such as container widths 
+  and main content padding.
+*/
+
+.container {
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 10px;
+}
+
+main {
+    padding: 1rem 0;
+}
+
+.movie-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    padding: 1rem;
+}

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import MovieCard from '../components/MovieCard';
+import Modal from '../components/Modal';
 
 export default function Home() {
   const [movies, setMovies] = useState([]);
@@ -11,6 +12,8 @@ export default function Home() {
   const [sortOption, setSortOption] = useState('rating');
   const [yearFilter, setYearFilter] = useState('all');
   const [category, setCategory] = useState('all');
+  const [showModal, setShowModal] = useState(false);
+  const [loadingMovie, setLoadingMovie] = useState(false);
 
   const fetchMovies = async (page = 1, limit = 32, sort = 'rating', year = 'all', category = 'all') => {
     setLoading(true);
@@ -21,11 +24,13 @@ export default function Home() {
   };
 
   const fetchRandomMovie = async () => {
+    setShowModal(true);
+    setLoadingMovie(true);
     const res = await fetch('/api/movies?random=true');
     const movie = await res.json();
     console.log('Random Movie:', movie);
     setRandomMovie(movie);
-    console.log(randomMovie == null)
+    setLoadingMovie(false);
   };
 
   useEffect(() => {
@@ -39,7 +44,7 @@ export default function Home() {
   return (
     <Layout>
       <div className="flex justify-between items-center mb-8">
-      <button onClick={(e) => {
+        <button onClick={(e) => {
             e.preventDefault();
             fetchRandomMovie();
             console.log("fetching movie");
@@ -118,25 +123,38 @@ export default function Home() {
           <option value="100">Show 100</option>
         </select>
       </div>
-      {randomMovie !== null && (
-        <div className="random-movie mt-8">
-          <MovieCard movie={randomMovie} />
-          {randomMovie.trailerId ? (
-            <iframe
-              width="560"
-              height="315"
-              src={`https://www.youtube.com/embed/${randomMovie.trailerId}`}
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              title="Random Movie Trailer"
-              className="mt-4"
-            ></iframe>
-          ) : (
-            <p className="mt-4 text-white">Trailer not available</p>
-          )}
-        </div>
-      )}
+      <Modal show={showModal} onClose={() => setShowModal(false)}>
+        {loadingMovie ? (
+          <div className="loading-movie">
+            <p className="text-white">Loading movie...</p>
+          </div>
+        ) : (
+          randomMovie && (
+            <div className="movie-details">
+              <h2 className="text-3xl font-bold text-white">{randomMovie.primaryTitle}</h2>
+              <p className="text-white">{randomMovie.genres}</p>
+              <p className="text-white">{randomMovie.startYear}</p>
+              <div className="movie-card">
+                <MovieCard movie={randomMovie} />
+              </div>
+              {randomMovie.trailerId ? (
+                <iframe
+                  width="560"
+                  height="315"
+                  src={`https://www.youtube.com/embed/${randomMovie.trailerId}`}
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  title="Random Movie Trailer"
+                  className="mt-4"
+                ></iframe>
+              ) : (
+                <p className="mt-4 text-white">Trailer not available</p>
+              )}
+            </div>
+          )
+        )}
+      </Modal>
     </Layout>
   );
 }
