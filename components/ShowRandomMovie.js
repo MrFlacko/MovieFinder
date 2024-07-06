@@ -1,33 +1,27 @@
-// components/ShowRandomMovie.js
-
-import React, { useState, useEffect } from 'react';
-// import { buildFilters } from '../pages/api/filters';
-// import { filters } from './filterOptions.js';
+import React, { useState, useEffect, useRef } from 'react';
 
 const ShowRandomMovie = ({ show, onClose }) => {
   const [loadingMovie, setLoadingMovie] = useState(false);
   const [randomMovie, setRandomMovie] = useState(null);
   const [posterUrl, setPosterUrl] = useState('');
+  const hasFetchedMovie = useRef(false);
 
   const fetchRandomMovie = async () => {
     setLoadingMovie(true);
-    // const filterConditions = buildFilters(filters); // Build filter conditions
     try {
       const res = await fetch('/api/movies?random=true');
       const movie = await res.json();
       console.log('Random Movie:', movie);
 
-      // Fetch trailer URL using trailer.js
       const trailerResponse = await fetch(`/api/trailer?title=${encodeURIComponent(movie.primaryTitle)}`);
       const trailerData = await trailerResponse.json();
 
       if (trailerResponse.ok) {
         setRandomMovie({ ...movie, trailerUrl: trailerData.trailerUrl });
       } else {
-        setRandomMovie({ ...movie, trailerUrl: null }); // Handle no trailer scenario
+        setRandomMovie({ ...movie, trailerUrl: null });
       }
 
-      // Fetch poster URL from OMDB API
       const posterResponse = await fetch(`https://www.omdbapi.com/?t=${encodeURIComponent(movie.primaryTitle)}&apikey=${process.env.NEXT_PUBLIC_OMDB_API_KEY}`);
       const posterData = await posterResponse.json();
       setPosterUrl(posterData.Poster !== 'N/A' ? posterData.Poster : '');
@@ -41,8 +35,15 @@ const ShowRandomMovie = ({ show, onClose }) => {
   };
 
   useEffect(() => {
-    if (show) {
+    if (show && !hasFetchedMovie.current) {
       fetchRandomMovie();
+      hasFetchedMovie.current = true;
+    }
+  }, [show]);
+
+  useEffect(() => {
+    if (!show) {
+      hasFetchedMovie.current = false; 
     }
   }, [show]);
 
