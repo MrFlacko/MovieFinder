@@ -1,8 +1,3 @@
-/*
-  Movie Card Styles: This file contains styles for the movie card component, 
-  including its hover effects, typography, and layout adjustments.
-*/
-
 .movie-card {
     background-color: #1f1f1f;
     border: 1px solid #333;
@@ -15,62 +10,84 @@
     align-items: center;
     position: relative;
     cursor: pointer;
-    height: auto; /* Set to auto to avoid fixed height issues */
-    min-height: 400px; /* Ensure minimum height */
+    height: auto;
+    min-height: 400px;
     margin-bottom: 20px;
-}
-
-.movie-card:hover {
+  }
+  
+  .movie-card:hover {
     background-color: #2a2a2a;
     transform: translateY(-10px);
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
-}
-
-.movie-card h3 {
+  }
+  
+  .movie-card h3 {
     font-size: 1.25rem;
     font-weight: bold;
     margin: 10px 0;
-}
-
-.movie-card img {
+  }
+  
+  .movie-card img {
     width: 100%;
-    height: 100%;
-    /* Adjust as necessary */
+    height: auto;
     border-bottom: 1px solid #333;
     transition: transform 0.3s;
     object-fit: cover;
-}
-
-.movie-card .movie-info {
+  }
+  
+  .movie-card .movie-info {
     padding: 10px;
     text-align: center;
     flex-grow: 1;
-    height: 20%;
-    /* Adjust as necessary */
-}
-
-.movie-card, .trailer-iframe {
-    flex: 1;
-    min-width: 300px;
-}
-
-.movie-info {
+  }
+  
+  .movie-info {
     padding: 1rem;
     text-align: center;
-}
-
-.movie-info h3 {
+  }
+  
+  .movie-info h3 {
     font-size: 1.5rem;
     font-weight: bold;
     margin: 0 0 0.5rem;
     color: #fff;
-}
-
-.movie-info p {
+  }
+  
+  .movie-info p {
     margin: 0;
     color: #aaa;
-}
-
-/* .movie-card:hover img {
-    transform: scale(1.1);
-} */
+  }
+  
+  .expanded-card {
+    width: 100%;
+    padding: 1rem;
+    background-color: #1f1f1f;
+  }
+  
+  .expanded-card-content {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .trailer-container {
+    width: 100%;
+    padding-top: 1rem;
+  }
+  
+  .trailer-iframe {
+    width: 100%;
+    height: 300px;
+    border: none;
+  }
+  
+  .expand-button {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    margin-top: 1rem;
+    font-size: 1.5rem;
+  }
+  

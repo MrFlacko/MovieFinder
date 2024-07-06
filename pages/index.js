@@ -1,176 +1,57 @@
 import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
-import MovieCard from '../components/MovieCard';
-import Modal from '../components/Modal';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
 
 export default function Home() {
   const [movies, setMovies] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [randomMovie, setRandomMovie] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(32);
   const [sortOption, setSortOption] = useState('rating');
   const [yearFilter, setYearFilter] = useState('all');
   const [category, setCategory] = useState('all');
   const [showModal, setShowModal] = useState(false);
-  const [loadingMovie, setLoadingMovie] = useState(false);
-
-  const fetchMovies = async (page = 1, limit = 32, sort = 'rating', year = 'all', category = 'all') => {
-    setLoading(true);
-    const res = await fetch(`/api/movies?page=${page - 1}&limit=${limit}&sort=${sort}&year=${year}&category=${category}`);
-    const data = await res.json();
-    setMovies(prevMovies => [...prevMovies, ...data]);
-    setLoading(false);
-  };
-
-  const fetchRandomMovie = async () => {
-    setShowModal(true);
-    setLoadingMovie(true);
-    try {
-      const res = await fetch('/api/movies?random=true');
-      const movie = await res.json();
-      console.log('Random Movie:', movie);
-
-      // Fetch trailer URL using trailer.js
-      const trailerResponse = await fetch(`/api/trailer?title=${encodeURIComponent(movie.primaryTitle)}`);
-      const trailerData = await trailerResponse.json();
-
-      if (trailerResponse.ok) {
-        setRandomMovie({ ...movie, trailerUrl: trailerData.trailerUrl });
-      } else {
-        setRandomMovie({ ...movie, trailerUrl: null });  // Handle no trailer scenario
-      }
-    } catch (error) {
-      console.error('Error fetching movie or trailer:', error);
-      setRandomMovie(null);
-    } finally {
-      setLoadingMovie(false);
-    }
-  };
-
 
   useEffect(() => {
-    fetchMovies(currentPage, itemsPerPage, sortOption, yearFilter, category);
+    const fetchMovies = async () => {
+      setLoading(true);
+      const res = await fetch(`/api/movies?page=${currentPage - 1}&limit=${itemsPerPage}&sort=${sortOption}&year=${yearFilter}&category=${category}`);
+      const data = await res.json();
+      setMovies(prevMovies => [...prevMovies, ...data]);
+      setLoading(false);
+    };
+
+    fetchMovies();
   }, [currentPage, itemsPerPage, sortOption, yearFilter, category]);
 
-  const loadMoreMovies = () => {
-    setCurrentPage(prevPage => prevPage + 1);
+  const loadMoreMovies = () => setCurrentPage(prevPage => prevPage + 1);
+
+  const handleItemsPerPageChange = (e) => {
+    setItemsPerPage(Number(e.target.value));
+    setCurrentPage(1);
+    setMovies([]);
   };
 
   return (
-    <Layout>
-      <div className="flex justify-between items-center mb-8">
-        <button onClick={(e) => {
-          e.preventDefault();
-          fetchRandomMovie();
-          console.log("fetching movie");
-        }} className="btn-random-movie">
-          Show Random Movie
-        </button>
-        <div className="flex items-center">
-          <label className="mr-2 text-white">Sort By:</label>
-          <select
-            value={sortOption}
-            onChange={(e) => setSortOption(e.target.value)}
-            className="bg-gray-700 text-white py-2 px-4 rounded-lg shadow-md transition duration-300 hover:bg-gray-600"
-          >
-            <option value="rating">Rating</option>
-            <option value="releaseDate">Release Date</option>
-            <option value="title">Title</option>
-          </select>
-        </div>
-        <div className="flex items-center">
-          <label className="mr-2 text-white">Year:</label>
-          <select
-            value={yearFilter}
-            onChange={(e) => setYearFilter(e.target.value)}
-            className="bg-gray-700 text-white py-2 px-4 rounded-lg shadow-md transition duration-300 hover:bg-gray-600"
-          >
-            <option value="all">All</option>
-            <option value="2023">2023</option>
-            <option value="2022">2022</option>
-            <option value="2021">2021</option>
-            <option value="2020">2020</option>
-          </select>
-        </div>
-        <div className="flex items-center">
-          <label className="mr-2 text-white">Category:</label>
-          <select
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            className="bg-gray-700 text-white py-2 px-4 rounded-lg shadow-md transition duration-300 hover:bg-gray-600"
-          >
-            <option value="all">All</option>
-            <option value="action">Action</option>
-            <option value="comedy">Comedy</option>
-            <option value="drama">Drama</option>
-            <option value="horror">Horror</option>
-            <option value="romance">Romance</option>
-            <option value="sci-fi">Sci-Fi</option>
-            <option value="thriller">Thriller</option>
-          </select>
-        </div>
-      </div>
-      <div className="w-full px-0 mx-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-8 gap-4">
-        {movies.map(movie => (
-          <MovieCard key={movie.tconst} movie={movie} />
-        ))}
-      </div>
-      {loading && <div className="text-center mt-8 text-white">Loading more movies...</div>}
-      <div className="text-center mt-8">
-        <button
-          onClick={loadMoreMovies}
-          className="bg-blue-600 hover:bg-blue-800 text-white py-2 px-4 rounded-lg shadow-md transition duration-300"
-        >
-          Load More
-        </button>
-        <select
-          onChange={(e) => {
-            setItemsPerPage(Number(e.target.value));
-            setCurrentPage(1);
-            setMovies([]);
-            fetchMovies(1, Number(e.target.value), sortOption, yearFilter, category);
-          }}
-          value={itemsPerPage}
-          className="ml-4 py-2 px-4 rounded-lg bg-gray-800 text-white shadow-md transition duration-300 hover:bg-gray-600"
-        >
-          <option value="32">Show 32</option>
-          <option value="50">Show 50</option>
-          <option value="100">Show 100</option>
-        </select>
-      </div>
-      <Modal show={showModal} onClose={() => setShowModal(false)}>
-        {loadingMovie ? (
-          <div className="loading-movie">
-            <p className="text-white">Loading movie...</p>
-          </div>
-        ) : (
-          randomMovie && (
-            <div className="movie-details">
-              <h2 className="text-3xl font-bold text-white">{randomMovie.primaryTitle}</h2>
-              <p className="text-white">{randomMovie.genres}</p>
-              <p className="text-white">{randomMovie.startYear}</p>
-              <div className="movie-card">
-                <MovieCard movie={randomMovie} />
-              </div>
-              {randomMovie?.trailerUrl ? (
-                <iframe
-                  width="560"
-                  height="315"
-                  src={randomMovie.trailerUrl}
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  title="Random Movie Trailer"
-                  className="mt-4"
-                ></iframe>
-              ) : (
-                <p className="mt-4 text-white">Trailer not available</p>
-              )}
-            </div>
-          )
-        )}
-      </Modal>
-    </Layout>
+    <>
+      <Header />
+      <Layout
+        movies={movies}
+        loading={loading}
+        sortOption={sortOption}
+        setSortOption={setSortOption}
+        yearFilter={yearFilter}
+        setYearFilter={setYearFilter}
+        category={category}
+        setCategory={setCategory}
+        showModal={showModal}
+        setShowModal={setShowModal}
+        loadMoreMovies={loadMoreMovies}
+        handleItemsPerPageChange={handleItemsPerPageChange}
+        itemsPerPage={itemsPerPage}
+      />
+      <Footer />
+    </>
   );
 }

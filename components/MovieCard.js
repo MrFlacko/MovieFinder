@@ -10,7 +10,6 @@ const MovieCard = ({ movie }) => {
   useEffect(() => {
     const fetchPoster = async () => {
       try {
-        console.log('Fetching poster for:', movie.primaryTitle);
         const response = await fetch(`https://www.omdbapi.com/?t=${encodeURIComponent(movie.primaryTitle)}&apikey=${process.env.NEXT_PUBLIC_OMDB_API_KEY}`);
         const data = await response.json();
         setPosterUrl(data.Poster !== 'N/A' ? data.Poster : '');
@@ -26,7 +25,6 @@ const MovieCard = ({ movie }) => {
   const fetchTrailer = async () => {
     setLoading(true);
     try {
-      console.log('Fetching trailer for:', movie.primaryTitle);
       const response = await fetch(`/api/trailer?title=${encodeURIComponent(movie.primaryTitle)}`);
       const data = await response.json();
       setTrailerUrl(data.trailerUrl);
@@ -67,22 +65,22 @@ const MovieCard = ({ movie }) => {
               <p>Runtime: {movie.runtimeMinutes} minutes</p>
               <p>Description: {movie.description}</p>
             </div>
-          </div>
-          <div className="trailer-container">
-            {loading ? (
-              <p>Loading movie trailer...</p>
-            ) : (
-              trailerUrl ? (
-                <iframe
-                  src={trailerUrl}
-                  allow="autoplay; encrypted-media"
-                  allowFullScreen
-                  className="trailer-iframe"
-                ></iframe>
+            <div className="trailer-container">
+              {loading ? (
+                <p>Loading movie trailer...</p>
               ) : (
-                <p>Trailer not available</p>
-              )
-            )}
+                trailerUrl ? (
+                  <iframe
+                    src={trailerUrl}
+                    allow="autoplay; encrypted-media"
+                    allowFullScreen
+                    className="trailer-iframe"
+                  ></iframe>
+                ) : (
+                  <p>Trailer not available</p>
+                )
+              )}
+            </div>
           </div>
         </div>
       )}

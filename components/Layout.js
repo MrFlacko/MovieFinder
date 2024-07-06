@@ -1,46 +1,53 @@
-import { useState } from 'react';
+import React from 'react';
+import Sorting from './Sorting';
+import MovieCard from './MovieCard';
+import ShowRandomMovie from './ShowRandomMovie';
 
-export default function Layout({ children, onSortChange }) {
-  const [sortOption, setSortOption] = useState('releaseDate');
-
-  const handleSortChange = (e) => {
-    setSortOption(e.target.value);
-    onSortChange(e.target.value);
-  };
-
+export default function Layout({
+  movies,
+  loading,
+  sortOption,
+  setSortOption,
+  yearFilter,
+  setYearFilter,
+  category,
+  setCategory,
+  showModal,
+  setShowModal,
+  loadMoreMovies,
+  handleItemsPerPageChange,
+  itemsPerPage,
+}) {
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      <header className="bg-gray-800 py-4">
-        <div className="container mx-auto flex justify-between items-center">
-          <div>
-            <h1 className="text-4xl font-bold">Movie Trailer Finder</h1>
-            <p className="mt-2 text-lg">Discover and watch trailers for the latest movies</p>
-          </div>
-          <div>
-            <label className="mr-2">Sort By:</label>
-            <select
-              value={sortOption}
-              onChange={handleSortChange}
-              className="bg-gray-700 text-white py-2 px-4 rounded"
-            >
-              <option value="title">Title</option>
-              <option value="year">Year</option>
-              <option value="releaseDate">Release Date</option>
-              <option value="rating">Rating</option>
-              <option value="duration">Duration</option>
-              <option value="random">Randomly</option>
-            </select>
-          </div>
-        </div>
-      </header>
       <main className="container mx-auto py-8">
-        {children}
-      </main>
-      <footer className="bg-gray-800 py-4">
-        <div className="container mx-auto text-center">
-          <p>&copy; 2024 Movie Trailer Finder. All rights reserved.</p>
+        <Sorting
+          sortOption={sortOption}
+          setSortOption={setSortOption}
+          yearFilter={yearFilter}
+          setYearFilter={setYearFilter}
+          category={category}
+          setCategory={setCategory}
+          setShowModal={setShowModal}
+        />
+        <div className="w-full px-0 mx-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-8 gap-4">
+          {movies.map(movie => (<MovieCard key={movie.tconst} movie={movie} />))}
         </div>
-      </footer>
+        {loading && <div className="text-center mt-8 text-white">Loading more movies...</div>}
+        <div className="text-center mt-8">
+          <button
+            onClick={loadMoreMovies} className="bg-blue-600 hover:bg-blue-800 text-white py-2 px-4 rounded-lg shadow-md transition duration-300">
+            Load More
+          </button>
+          <select
+            onChange={handleItemsPerPageChange} value={itemsPerPage} className="ml-4 py-2 px-4 rounded-lg bg-gray-800 text-white shadow-md transition duration-300 hover:bg-gray-600">
+            <option value="32">Show 32</option>
+            <option value="50">Show 50</option>
+            <option value="100">Show 100</option>
+          </select>
+        </div>
+        <ShowRandomMovie show={showModal} onClose={() => setShowModal(false)} />
+      </main>
     </div>
   );
 }

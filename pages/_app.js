@@ -5,7 +5,7 @@ import '../styles/header.css';
 import '../styles/buttons.css';
 import '../styles/movie-card.css';
 import '../styles/expanded-card.css';
-import '../styles/modal.css';
+import '../styles/show-random-movie.css';
 
 function MyApp({ Component, pageProps }) {
   return <Component {...pageProps} />;
