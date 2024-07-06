@@ -1,3 +1,8 @@
+/*
+  Show Random Movie Styles: This file includes styles for the modal 
+  displaying a randomly selected movie.
+*/
+
 .modal-overlay {
     position: fixed;
     top: 0;

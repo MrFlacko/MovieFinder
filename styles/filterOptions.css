@@ -1,3 +1,8 @@
+/*
+  Filter Options Styles: This file includes styles for the filter options panel,
+  ensuring it is responsive and user-friendly.
+*/
+
 .filter-options-container {
     background-color: #2a2a2a;
     border: 1px solid #444;
@@ -44,8 +49,14 @@
 
 .filter-options-content.show {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
+    grid-template-columns: 1fr;
+}
+
+@media (min-width: 768px) {
+    .filter-options-content.show {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+    }
 }
 
 .filter-group {
@@ -98,6 +109,13 @@
     width: 100%;
 }
 
+@media (min-width: 768px) {
+    .filter-options button {
+        font-size: 12px;
+        padding: 6px;
+    }
+}
+
 .filter-options button:hover {
     background-color: #005bb5;
 }
@@ -114,27 +132,8 @@
     padding-bottom: 5px;
 }
 
-@media (max-width: 768px) {
-    .filter-options-container {
-        padding: 5px;
-        margin: 5px 0;
-        width: 100%;
-    }
-
-    .filter-options-header h2 {
-        font-size: 14px;
-    }
-
-    .filter-options button {
-        font-size: 12px;
-        padding: 6px;
-    }
-
+@media (min-width: 768px) {
     .filter-category h3 {
         font-size: 12px;
-    }
-
-    .filter-options-content.show {
-        grid-template-columns: 1fr;
     }
 }

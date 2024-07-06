@@ -9,7 +9,7 @@ export default function Sorting({
   setCategory,
 }) {
   return (
-    <div className="flex justify-between items-center mb-8">
+    <div className="flex flex-col md:flex-row justify-between items-center mb-8 space-y-4 md:space-y-0">
       <div className="flex items-center">
         <label className="mr-2 text-white">Sort By:</label>
         <select
