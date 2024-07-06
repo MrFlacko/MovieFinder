@@ -6,6 +6,8 @@ import '../styles/buttons.css';
 import '../styles/movie-card.css';
 import '../styles/expanded-card.css';
 import '../styles/show-random-movie.css';
+import '../styles/filterOptions.css';
+
 
 function MyApp({ Component, pageProps }) {
   return <Component {...pageProps} />;

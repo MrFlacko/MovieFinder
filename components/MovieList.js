@@ -96,7 +96,7 @@ export default function MovieList() {
           </select>
         </div>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-8 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
         {movies.map(movie => (
           <div key={movie.title} className="movie-card bg-gray-800 text-white rounded-lg p-4 shadow-md hover:shadow-lg transition duration-300">
             <img src={movie.poster} alt={`${movie.title} Poster`} className="w-full h-auto rounded"/>

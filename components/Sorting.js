@@ -7,13 +7,9 @@ export default function Sorting({
   setYearFilter,
   category,
   setCategory,
-  setShowModal,
 }) {
   return (
     <div className="flex justify-between items-center mb-8">
-      <button onClick={() => setShowModal(true)} className="btn-random-movie">
-        Show Random Movie
-      </button>
       <div className="flex items-center">
         <label className="mr-2 text-white">Sort By:</label>
         <select

@@ -13,55 +13,54 @@
     max-height: 0;
     overflow: hidden;
     transition: max-height 0.3s ease;
-  }
-  
-  .expanded-card.show {
+}
+
+.expanded-card.show {
     max-height: 800px; /* Ensure enough height */
-  }
-  
-  .expanded-card-content {
+}
+
+.expanded-card-content {
     padding: 20px;
-  }
-  
-  .extra-info {
+}
+
+.extra-info {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     width: 100%;
     gap: 10px;
-  }
-  
-  .expanded-card .movie-info {
+}
+
+.expanded-card .movie-info {
     width: 100%;
     text-align: left;
-  }
-  
-  .expanded-card .trailer-container {
+}
+
+.expanded-card .trailer-container {
     width: 100%;
     margin-top: 20px;
-  }
-  
-  .expanded-card .trailer-container iframe {
+}
+
+.expanded-card .trailer-container iframe {
     width: 100%;
     aspect-ratio: 16/9;
     border: 0;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  }
-  
-  @media (min-width: 600px) {
+}
+
+@media (min-width: 600px) {
     .expanded-card-content {
-      flex-direction: row;
+        flex-direction: row;
     }
-  
+
     .expanded-card .movie-info {
-      width: 50%;
-      padding-right: 20px;
+        width: 50%;
+        padding-right: 20px;
     }
-  
+
     .expanded-card .trailer-container {
-      width: 50%;
-      margin-top: 0;
+        width: 50%;
+        margin-top: 0;
     }
-  }
-  
+}

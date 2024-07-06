@@ -1,6 +1,7 @@
 import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
+import { filters, buildFilters } from './filters'; // Correct the import path
 
 const dbPath = path.resolve(process.cwd(), 'db', 'databases', 'imdb.db');
 console.log('Resolved database path:', dbPath);
@@ -12,24 +13,29 @@ if (!fs.existsSync(dbPath)) {
 
 const db = new Database(dbPath, { verbose: console.log });
 
+const filterConditions = buildFilters(filters);
+
 const prepareStatements = () => {
   const queries = {
     rating: db.prepare(`SELECT title_basics.tconst, primaryTitle, originalTitle, startYear, runtimeMinutes, genres, averageRating 
                         FROM title_basics 
                         JOIN title_ratings ON title_basics.tconst = title_ratings.tconst 
                         WHERE title_basics.titleType = 'movie' 
+                        AND ${filterConditions} 
                         ORDER BY title_ratings.averageRating DESC 
                         LIMIT ? OFFSET ?`),
     releaseDate: db.prepare(`SELECT title_basics.tconst, primaryTitle, originalTitle, startYear, runtimeMinutes, genres, averageRating 
                              FROM title_basics 
                              JOIN title_ratings ON title_basics.tconst = title_ratings.tconst 
                              WHERE title_basics.titleType = 'movie' 
+                             AND ${filterConditions} 
                              ORDER BY title_basics.startYear DESC 
                              LIMIT ? OFFSET ?`),
     title: db.prepare(`SELECT title_basics.tconst, primaryTitle, originalTitle, startYear, runtimeMinutes, genres, averageRating 
                        FROM title_basics 
                        JOIN title_ratings ON title_basics.tconst = title_ratings.tconst 
                        WHERE title_basics.titleType = 'movie' 
+                       AND ${filterConditions} 
                        ORDER BY title_basics.primaryTitle ASC 
                        LIMIT ? OFFSET ?`)
   };
@@ -46,9 +52,10 @@ export default async function handler(req, res) {
     const movies = db.prepare(`SELECT title_basics.tconst, primaryTitle, originalTitle, startYear, runtimeMinutes, genres, averageRating 
                                FROM title_basics 
                                JOIN title_ratings ON title_basics.tconst = title_ratings.tconst 
-                               WHERE title_basics.titleType = 'movie'`).all();
+                               WHERE title_basics.titleType = 'movie' 
+                               AND ${filterConditions}`).all();
     const randomMovie = movies[Math.floor(Math.random() * movies.length)];
-    console.log('Random Movie:', randomMovie);  // Add this line
+    console.log('Random Movie:', randomMovie);
     res.status(200).json(randomMovie);
     return;
   }

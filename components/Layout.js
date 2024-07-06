@@ -30,7 +30,7 @@ export default function Layout({
           setCategory={setCategory}
           setShowModal={setShowModal}
         />
-        <div className="w-full px-0 mx-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-8 gap-4">
+        <div className="w-full px-0 mx-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
           {movies.map(movie => (<MovieCard key={movie.tconst} movie={movie} />))}
         </div>
         {loading && <div className="text-center mt-8 text-white">Loading more movies...</div>}

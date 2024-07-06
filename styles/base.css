@@ -17,3 +17,19 @@ body {
     position: relative;
     overflow-x: hidden;
 }
+
+/* Global button styles */
+button {
+    font-family: 'Roboto', sans-serif;
+    background-color: #0070f3;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #005bb5;
+}

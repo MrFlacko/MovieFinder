@@ -1,14 +1,17 @@
 // components/ShowRandomMovie.js
 
 import React, { useState, useEffect } from 'react';
-import MovieCard from './MovieCard';
+// import { buildFilters } from '../pages/api/filters';
+// import { filters } from './filterOptions.js';
 
 const ShowRandomMovie = ({ show, onClose }) => {
   const [loadingMovie, setLoadingMovie] = useState(false);
   const [randomMovie, setRandomMovie] = useState(null);
+  const [posterUrl, setPosterUrl] = useState('');
 
   const fetchRandomMovie = async () => {
     setLoadingMovie(true);
+    // const filterConditions = buildFilters(filters); // Build filter conditions
     try {
       const res = await fetch('/api/movies?random=true');
       const movie = await res.json();
@@ -23,9 +26,15 @@ const ShowRandomMovie = ({ show, onClose }) => {
       } else {
         setRandomMovie({ ...movie, trailerUrl: null }); // Handle no trailer scenario
       }
+
+      // Fetch poster URL from OMDB API
+      const posterResponse = await fetch(`https://www.omdbapi.com/?t=${encodeURIComponent(movie.primaryTitle)}&apikey=${process.env.NEXT_PUBLIC_OMDB_API_KEY}`);
+      const posterData = await posterResponse.json();
+      setPosterUrl(posterData.Poster !== 'N/A' ? posterData.Poster : '');
     } catch (error) {
       console.error('Error fetching movie or trailer:', error);
       setRandomMovie(null);
+      setPosterUrl('');
     } finally {
       setLoadingMovie(false);
     }
@@ -51,27 +60,32 @@ const ShowRandomMovie = ({ show, onClose }) => {
           </div>
         ) : (
           randomMovie && (
-            <div className="movie-details">
-              <h2 className="text-3xl font-bold text-white">{randomMovie.primaryTitle}</h2>
-              <p className="text-white">{randomMovie.genres}</p>
-              <p className="text-white">{randomMovie.startYear}</p>
-              <div className="movie-card">
-                <MovieCard movie={randomMovie} />
+            <div className="movie-details-container">
+              <div className="movie-image">
+                <img src={posterUrl} alt={randomMovie.primaryTitle} className="poster" />
               </div>
-              {randomMovie?.trailerUrl ? (
-                <iframe
-                  width="560"
-                  height="315"
-                  src={randomMovie.trailerUrl}
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  title="Random Movie Trailer"
-                  className="mt-4"
-                ></iframe>
-              ) : (
-                <p className="mt-4 text-white">Trailer not available</p>
-              )}
+              <div className="movie-details">
+                <h2 className="movie-title">{randomMovie.primaryTitle}</h2>
+                <p className="movie-genres">{randomMovie.genres}</p>
+                <p className="movie-year">{randomMovie.startYear}</p>
+                <p className="movie-overview">{randomMovie.overview}</p>
+              </div>
+              <div className="trailer-iframe-container">
+                {randomMovie?.trailerUrl ? (
+                  <iframe
+                    src={randomMovie.trailerUrl}
+                    className="trailer-iframe"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    title="Random Movie Trailer"
+                  ></iframe>
+                ) : (
+                  <p className="no-trailer">Trailer not available</p>
+                )}
+              </div>
+              <button onClick={fetchRandomMovie} className="btn-random-movie-regen">
+                Regenerate
+              </button>
             </div>
           )
         )}

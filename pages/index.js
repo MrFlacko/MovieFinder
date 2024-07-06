@@ -1,7 +1,10 @@
+// pages/index.js
 import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import FilterOptions from '../components/filterOptions';
+import ShowRandomMovie from '../components/ShowRandomMovie';
 
 export default function Home() {
   const [movies, setMovies] = useState([]);
@@ -12,6 +15,7 @@ export default function Home() {
   const [yearFilter, setYearFilter] = useState('all');
   const [category, setCategory] = useState('all');
   const [showModal, setShowModal] = useState(false);
+  const [filters, setFilters] = useState({});
 
   useEffect(() => {
     const fetchMovies = async () => {
@@ -33,9 +37,19 @@ export default function Home() {
     setMovies([]);
   };
 
+  const handleApplyFilters = (appliedFilters) => {
+    setFilters(appliedFilters);
+    setShowModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+  };
+
   return (
     <>
-      <Header />
+      <Header setShowModal={setShowModal} />
+      <FilterOptions onApplyFilters={handleApplyFilters} />
       <Layout
         movies={movies}
         loading={loading}
@@ -51,6 +65,7 @@ export default function Home() {
         handleItemsPerPageChange={handleItemsPerPageChange}
         itemsPerPage={itemsPerPage}
       />
+      <ShowRandomMovie show={showModal} onClose={handleCloseModal} filters={filters} />
       <Footer />
     </>
   );
