@@ -26,12 +26,28 @@ export default function Home() {
   const fetchRandomMovie = async () => {
     setShowModal(true);
     setLoadingMovie(true);
-    const res = await fetch('/api/movies?random=true');
-    const movie = await res.json();
-    console.log('Random Movie:', movie);
-    setRandomMovie(movie);
-    setLoadingMovie(false);
+    try {
+      const res = await fetch('/api/movies?random=true');
+      const movie = await res.json();
+      console.log('Random Movie:', movie);
+
+      // Fetch trailer URL using trailer.js
+      const trailerResponse = await fetch(`/api/trailer?title=${encodeURIComponent(movie.primaryTitle)}`);
+      const trailerData = await trailerResponse.json();
+
+      if (trailerResponse.ok) {
+        setRandomMovie({ ...movie, trailerUrl: trailerData.trailerUrl });
+      } else {
+        setRandomMovie({ ...movie, trailerUrl: null });  // Handle no trailer scenario
+      }
+    } catch (error) {
+      console.error('Error fetching movie or trailer:', error);
+      setRandomMovie(null);
+    } finally {
+      setLoadingMovie(false);
+    }
   };
+
 
   useEffect(() => {
     fetchMovies(currentPage, itemsPerPage, sortOption, yearFilter, category);
@@ -45,10 +61,10 @@ export default function Home() {
     <Layout>
       <div className="flex justify-between items-center mb-8">
         <button onClick={(e) => {
-            e.preventDefault();
-            fetchRandomMovie();
-            console.log("fetching movie");
-          }} className="btn-random-movie">
+          e.preventDefault();
+          fetchRandomMovie();
+          console.log("fetching movie");
+        }} className="btn-random-movie">
           Show Random Movie
         </button>
         <div className="flex items-center">
@@ -137,11 +153,11 @@ export default function Home() {
               <div className="movie-card">
                 <MovieCard movie={randomMovie} />
               </div>
-              {randomMovie.trailerId ? (
+              {randomMovie?.trailerUrl ? (
                 <iframe
                   width="560"
                   height="315"
-                  src={`https://www.youtube.com/embed/${randomMovie.trailerId}`}
+                  src={randomMovie.trailerUrl}
                   frameBorder="0"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
