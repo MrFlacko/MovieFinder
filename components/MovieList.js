@@ -2,10 +2,9 @@ import { useState, useEffect } from 'react';
 
 export default function MovieList() {
   const [movies, setMovies] = useState([]);
-  
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(32); // Ensure this is 32
+  const [itemsPerPage, setItemsPerPage] = useState(32);
   const [sortOption, setSortOption] = useState('title');
   const [category, setCategory] = useState('all');
 
@@ -26,21 +25,22 @@ export default function MovieList() {
     if (existingExpandedCard) {
       existingExpandedCard.remove();
     }
+
     const expandedCard = document.createElement('div');
     expandedCard.classList.add('expanded-card', 'bg-gray-900', 'text-white', 'rounded-lg', 'shadow-lg', 'p-4', 'mt-4', 'transition-all', 'duration-300');
     expandedCard.innerHTML = `<div class="expanded-card-content">
       <div class="movie-info">
-        <h2 class="text-xl font-bold mb-2">${movie.title}</h2>
+        <h2 class="text-xl font-bold mb-2">${movie.primaryTitle}</h2>
         <div class="movie-details">
-          <p><strong>Release Date:</strong> ${movie.releaseDate}</p>
-          <p><strong>Rating:</strong> ${movie.rating}</p>
-          <p><strong>Description:</strong> ${movie.description}</p>
+          <p><strong>Release Date:</strong> ${movie.startYear}</p>
+          <p><strong>Rating:</strong> ${movie.averageRating}</p>
+          <p><strong>Description:</strong> ${movie.description || 'No description available'}</p>
         </div>
         <div class="extra-details mt-2">
-          <p><strong>Director:</strong> ${movie.director}</p>
-          <p><strong>Cast:</strong> ${movie.cast}</p>
-          <p><strong>Genre:</strong> ${movie.genre}</p>
-          <p><strong>Runtime:</strong> ${movie.runtime}</p>
+          <p><strong>Director:</strong> ${movie.director || 'Unknown'}</p>
+          <p><strong>Cast:</strong> ${movie.cast || 'Unknown'}</p>
+          <p><strong>Genre:</strong> ${movie.genres || 'Unknown'}</p>
+          <p><strong>Runtime:</strong> ${movie.runtimeMinutes || 'Unknown'} minutes</p>
         </div>
       </div>
       <div class="trailer-container mt-4">
@@ -98,9 +98,9 @@ export default function MovieList() {
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
         {movies.map(movie => (
-          <div key={movie.title} className="movie-card bg-gray-800 text-white rounded-lg p-4 shadow-md hover:shadow-lg transition duration-300">
-            <img src={movie.poster} alt={`${movie.title} Poster`} className="w-full h-auto rounded"/>
-            <h2 className="mt-2 text-lg font-bold">{movie.title}</h2>
+          <div key={movie.primaryTitle} className="movie-card bg-gray-800 text-white rounded-lg p-4 shadow-md hover:shadow-lg transition duration-300" onClick={(e) => showExpandedCard(movie, e.currentTarget)}>
+            <img src={movie.poster} alt={`${movie.primaryTitle} Poster`} className="w-full h-auto rounded"/>
+            <h2 className="mt-2 text-lg font-bold">{movie.primaryTitle}</h2>
           </div>
         ))}
         {loading && <div className="loading mt-4 text-white">Loading more movies...</div>}

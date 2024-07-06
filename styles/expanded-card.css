@@ -1,69 +1,94 @@
-/*
-  Expanded Card Styles: This file includes styles for the expanded movie card view, 
-  detailing the layout and responsiveness of the expanded card.
-*/
-
 .expanded-card {
     position: absolute;
-    top: 100%;
-    left: 0;
-    width: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 600px; /* Make it wider */
     background-color: #1f1f1f;
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
     max-height: 0;
     overflow: hidden;
-    transition: max-height 0.3s ease;
-}
-
-.expanded-card.show {
-    max-height: 800px; /* Ensure enough height */
-}
-
-.expanded-card-content {
-    padding: 20px;
-    flex-direction: column;
-}
-
-@media (min-width: 600px) {
-    .expanded-card-content {
-        flex-direction: row;
-    }
-}
-
-.extra-info {
+    transition: max-height 0.3s ease, width 0.3s ease;
+    z-index: 10;
+    border-radius: 10px; /* Rounded corners */
+  }
+  
+  .expanded-card.show {
+    max-height: 500px; /* Increased height */
+  }
+  
+  .expanded-card-header {
+    background-color: #333;
+    padding: 10px 20px;
+    color: #fff;
+    font-size: 1.5rem;
+    font-weight: bold;
+    border-top-left-radius: 10px; /* Rounded corners for the header */
+    border-top-right-radius: 10px;
     display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    width: 100%;
-    gap: 10px;
-}
-
-.expanded-card .movie-info {
-    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .expanded-card-content {
+    padding: 20px;
+    display: flex;
+    flex-direction: row; /* Make it a row */
+    align-items: flex-start; /* Align items to the top */
+  }
+  
+  .movie-info {
+    flex: 1; /* Flex to share space */
     text-align: left;
-}
-
-.expanded-card .trailer-container {
+    padding-right: 20px; /* Space between content and trailer */
+    color: #fff; /* White text */
+  }
+  
+  .trailer-container {
+    flex: 1; /* Flex to share space */
+    margin-left: 20px; /* Space between content and trailer */
+  }
+  
+  .expanded-trailer-iframe {
     width: 100%;
-    margin-top: 20px;
-}
-
-.expanded-card .trailer-container iframe {
+    height: 0;
+    padding-bottom: 56.25%; /* 16:9 aspect ratio */
+    position: relative;
+  }
+  
+  .expanded-trailer-iframe iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
-    aspect-ratio: 16/9;
+    height: 100%;
     border: 0;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-@media (min-width: 600px) {
-    .expanded-card .movie-info {
-        width: 50%;
-        padding-right: 20px;
+  }
+  
+  /* Media query for mobile devices */
+  @media (max-width: 768px) {
+    .expanded-card {
+      width: 90%; /* Adjust width for mobile */
     }
-
-    .expanded-card .trailer-container {
-        width: 50%;
-        margin-top: 0;
+  
+    .expanded-card-content {
+      flex-direction: column; /* Stack content vertically on mobile */
+      padding: 10px; /* Adjust padding for mobile */
     }
-}
+  
+    .movie-info {
+      padding-right: 0; /* Remove right padding on mobile */
+    }
+  
+    .trailer-container {
+      margin-left: 0; /* Remove left margin on mobile */
+      margin-top: 20px; /* Add top margin for spacing */
+    }
+  
+    .expanded-card-header {
+      font-size: 1.2rem; /* Adjust font size for mobile */
+      padding: 10px; /* Adjust padding for mobile */
+    }
+  }
+  
