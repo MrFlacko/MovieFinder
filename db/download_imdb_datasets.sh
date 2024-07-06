@@ -7,8 +7,6 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
-echo "Version 0.2"
-
 # Ensure required tools are installed
 install_required_tools() {
     echo -e "${BLUE}Checking for required tools...${NC}"
@@ -130,29 +128,6 @@ EOF
     echo -e "${GREEN}SQLite database schema created.${NC}"
 }
 
-# Function to import data
-import_table() {
-    dataset=$1
-    table=$(echo "$dataset" | sed 's/\./_/g')
-    file="${PWD}/${dataset}.tsv"
-    echo -e "${YELLOW}Importing ${file} into $table...${NC}"
-
-    # Import the data
-    {
-        echo ".mode tabs"
-        echo ".import \"$file\" $table"
-    } | sqlite3 imdb.db 2>> import_errors.log
-
-    # Check if the import command succeeded
-    if [[ $? -eq 0 ]]; then
-        echo -e "${GREEN}Data import for $table completed.${NC}"
-    else
-        echo -e "${RED}Error importing ${file}, aborting...${NC}"
-        cat import_errors.log
-        exit 1
-    fi
-}
-
 # Import data into SQLite database using bulk inserts
 import_to_sqlite() {
     echo -e "${BLUE}Starting import of data into SQLite database...${NC}"
@@ -170,8 +145,26 @@ EOF
         datasets=("name.basics")
     fi
 
-    export -f import_table
-    parallel import_table ::: "${datasets[@]}"
+    for dataset in "${datasets[@]}"; do
+        table=$(echo "$dataset" | sed 's/\./_/g')
+        file="${PWD}/${dataset}.tsv"
+        echo -e "${YELLOW}Importing ${file} into $table...${NC}"
+
+        # Import the data
+        {
+            echo ".mode tabs"
+            echo ".import \"$file\" $table"
+        } | sqlite3 imdb.db 2>> import_errors.log
+
+        # Check if the import command succeeded
+        if [[ $? -eq 0 ]]; then
+            echo -e "${GREEN}Data import for $table completed.${NC}"
+        else
+            echo -e "${RED}Error importing ${file}, aborting...${NC}"
+            cat import_errors.log
+            exit 1
+        fi
+    done
 
     sqlite3 imdb.db <<EOF
 PRAGMA journal_mode = DELETE;
