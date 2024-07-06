@@ -1,31 +1,42 @@
-# Use the official Node.js image.
-# https://hub.docker.com/_/node
 FROM node:18.17.0
 
-# Create and change to the app directory.
+# Install dependencies
+RUN apt-get update && apt-get install -y wget unzip pv sqlite3 parallel git
+
+# Create the app directory
+RUN mkdir -p /app/MovieFinder
+
+# Set the initial working directory
 WORKDIR /app
 
-# Run git to clone the repository.
-RUN git clone https://github.com/MrFlacko/MovieFinder.git /app/MovieFinder
+# Clone the repository initially to set up dependencies
+RUN git clone https://github.com/MrFlacko/MovieFinder.git MovieFinder
 
-# Change to the cloned directory
+# Set the working directory to the cloned repository
 WORKDIR /app/MovieFinder
 
-# Install dependencies.
+# Install Node.js dependencies
 RUN npm install
 
 # Install additional dependencies for database setup
-RUN apt-get update && apt-get install -y wget unzip pv sqlite3 parallel
-
-# Change to the db directory and run the database setup script
 WORKDIR /app/MovieFinder/db
 RUN chmod +x download_imdb_datasets.sh && ./download_imdb_datasets.sh
 
 # Expose the port the app runs on
 EXPOSE 3000
 
-# Change back to the app directory
-WORKDIR /app/MovieFinder
-
-# Run the web service on container startup.
-CMD [ "npm", "run", "dev" ]
+# Set the entry point to always reclone the repository and preserve the databases directory
+ENTRYPOINT ["/bin/sh", "-c", "\
+if [ -d /app/MovieFinder/db/databases ]; then \
+  mkdir -p /app/tmp && \
+  mv /app/MovieFinder/db/databases /app/tmp/; \
+fi && \
+rm -rf /app/MovieFinder && \
+cd /app && \
+git clone https://github.com/MrFlacko/MovieFinder.git MovieFinder && \
+if [ -d /app/tmp/databases ]; then \
+  mv /app/tmp/databases /app/MovieFinder/db/databases; \
+fi && \
+cd /app/MovieFinder && \
+npm install && \
+npm run dev"]
